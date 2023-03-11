@@ -11,6 +11,7 @@
     }
   },
   "runArgs": [
+    "--privileged",
     "--ulimit",
     "memlock=-1:-1",
     "--ulimit",

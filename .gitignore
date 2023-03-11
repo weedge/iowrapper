@@ -8,3 +8,9 @@
 
 # cgo
 _obj
+
+# fio
+*.log
+*.svg
+fio-test-file
+*.fio.data

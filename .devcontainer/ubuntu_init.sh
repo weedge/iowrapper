@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 set -e
 
 nproc=${1:-"1"}
