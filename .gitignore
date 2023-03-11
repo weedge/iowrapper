@@ -1,0 +1,10 @@
+# vscode
+.vscode
+#.devcontainer
+
+# vim
+.sw*
+*~
+
+# cgo
+_obj
