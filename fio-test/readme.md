@@ -109,3 +109,9 @@ rw_bw.{i}.log
 #sudo apt-get install gnuplot
 fio_generate_plots libaio-iouring.{seq/rand}
 ```
+
+### reference
+2. https://github.com/dgraph-io/badger-bench/blob/master/BENCH-rocks.txt
+3. https://github.com/dgraph-io/badger-bench/blob/master/BENCH-lmdb-bolt.md
+
+
