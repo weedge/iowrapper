@@ -14,3 +14,6 @@ _obj
 *.svg
 fio-test-file
 *.fio.data
+
+# test
+testdata/dummy.txt

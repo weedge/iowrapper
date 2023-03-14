@@ -24,3 +24,8 @@
 ### learn more try to change io
 1. badger: https://dgraph.io/blog/post/badger/
 2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
+
+
+### compiling linux kernel for new io_uring feature
+1. [kernel_compile](https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html)
+2. [the linux kernel archives](https://www.kernel.org/)

@@ -6,9 +6,7 @@
   //"image": "mcr.microsoft.com/devcontainers/go:0-1.19-bullseye",
   "build": {
     "dockerfile": "Dockerfile",
-    "args": {
-      "REINSTALL_CMAKE_VERSION_FROM_SOURCE": "3.24.0"
-    }
+    "args": {}
   },
   "runArgs": [
     "--privileged",
@@ -28,7 +26,9 @@
     "vscode": {
       "settings": {},
       "extensions": [
-        "streetsidesoftware.code-spell-checker"
+        //"streetsidesoftware.code-spell-checker"
+        "ms-vscode.cpptools",
+        "vadimcn.vscode-lldb"
       ]
     }
   },
@@ -37,8 +37,20 @@
   // Use 'portsAttributes' to set default properties for specific forwarded ports.
   // More info: https://containers.dev/implementors/json_reference/#port-attributes
   "portsAttributes": {
-    "9000": {
-      "label": "Hello Remote World",
+    "8883": {
+      "label": "c epoll echo server",
+      "onAutoForward": "notify"
+    },
+    "8884": {
+      "label": "c io_uring echo server",
+      "onAutoForward": "notify"
+    },
+    "8885": {
+      "label": "golang syscalls epoll echo server",
+      "onAutoForward": "notify"
+    },
+    "8886": {
+      "label": "golang syscalls io_uring echo server",
       "onAutoForward": "notify"
     }
   },
