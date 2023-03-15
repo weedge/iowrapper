@@ -17,3 +17,10 @@ fio-test-file
 
 # test
 testdata/dummy.txt
+
+
+# build
+build
+
+# bench
+bench-result

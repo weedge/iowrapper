@@ -1,4 +1,4 @@
-### io_uring
+## io_uring
 1. use liburing see readme, more detail: https://github.com/axboe/liburing <br> use cgo Notice: https://dave.cheney.net/2016/01/18/cgo-is-not-go
 
 ```c
@@ -29,3 +29,9 @@
 ### compiling linux kernel for new io_uring feature
 1. [kernel_compile](https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html)
 2. [the linux kernel archives](https://www.kernel.org/)
+
+
+
+### reference
+1. https://unixism.net/loti/
+2. https://unixism.net/2020/04/io-uring-by-example-article-series/
