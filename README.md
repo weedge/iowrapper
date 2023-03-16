@@ -11,11 +11,17 @@
  *
  */
 ```
+```shell
+# see linux os kernel support uring syscall
+cat /proc/kallsyms | grep uring
+# when use io_uring check sq
+ps --ppid ${pid} | grep io_uring-sq
+```
 
 
 2. u need use golang runtime native support, please Note: [#31908](https://github.com/golang/go/issues/31908)
 
-3. 3th io_uring support for golang https://github.com/hodgesds/iouring-go  https://github.com/godzie44/go-uring 
+3. 3rd io_uring support for golang https://github.com/hodgesds/iouring-go  https://github.com/godzie44/go-uring 
 
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
@@ -35,3 +41,4 @@
 ### reference
 1. https://unixism.net/loti/
 2. https://unixism.net/2020/04/io-uring-by-example-article-series/
+3. windows IORing: https://windows-internals.com/ioring-vs-io_uring-a-comparison-of-windows-and-linux-implementations/ 

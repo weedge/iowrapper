@@ -6,6 +6,9 @@ from:
 ## make && run server
 ```shell
 make build-echo
+
+
+# run single server to bench
 ./build/epoll_echo_server 8883
 ./build/io_uring_echo_server 8884
 ./build/coroutine_io_uring_echo_server 8882
@@ -23,6 +26,9 @@ sh ./netpoll/echo/taskset.sh 8882
 sh ./netpoll/echo/bench.sh 8883 epoll_echo_server
 sh ./netpoll/echo/bench.sh 8884 io_uring_echo_server
 sh ./netpoll/echo/bench.sh 8882 coroutine_io_uring_echo_server
+
+# or just bench all for avg result
+make bench-echo
 ```
 
 * Rust echo bench: https://github.com/haraldh/rust_echo_bench 
