@@ -28,7 +28,9 @@
       "extensions": [
         //"streetsidesoftware.code-spell-checker"
         "ms-vscode.cpptools",
-        "vadimcn.vscode-lldb"
+        "vadimcn.vscode-lldb",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml"
       ]
     }
   },
@@ -37,6 +39,10 @@
   // Use 'portsAttributes' to set default properties for specific forwarded ports.
   // More info: https://containers.dev/implementors/json_reference/#port-attributes
   "portsAttributes": {
+    "8881": {
+      "label": "rust io_uring echo server",
+      "onAutoForward": "notify"
+    },
     "8882": {
       "label": "cpp coroutine io_uring echo server",
       "onAutoForward": "notify"
@@ -50,7 +56,7 @@
       "onAutoForward": "notify"
     },
     "8885": {
-      "label": "golang syscalls epoll echo server",
+      "label": "golang syscalls epoll(netpoll) echo server",
       "onAutoForward": "notify"
     },
     "8886": {
