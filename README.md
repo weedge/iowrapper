@@ -42,3 +42,6 @@ ps --ppid ${pid} | grep io_uring-sq
 1. https://unixism.net/loti/
 2. https://unixism.net/2020/04/io-uring-by-example-article-series/
 3. windows IORing: https://windows-internals.com/ioring-vs-io_uring-a-comparison-of-windows-and-linux-implementations/ 
+4. [Diego Didona - Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring](https://www.youtube.com/watch?v=5jKKVdJJqKY)
+4. [awesome-iouring](https://github.com/espoal/awesome-iouring)
+

@@ -61,19 +61,19 @@ SSD是固态硬盘、HDD是机械硬盘、HHD是混合硬盘。SATA和SAS分别�
 > 块大小：4kb <br> 
 队列深度：128 <br> 
 oengine: libaio/io_uring <br>
-io_uring引擎下开启sqthread_pool <br>
+io_uring引擎下开启sqthread_poll <br>
 
 顺序IO - 实验libaio和io_uring对比分4组:
-1. libaio vs io_uring(sqthread_pool) 顺序读
-2. libaio vs io_uring(sqthread_pool) 顺序写
-3. libaio vs io_uring(sqthread_pool) 顺序读写 70%读
-4. libaio vs io_uring(sqthread_pool) 顺序读写 70%写
+1. libaio vs io_uring(sqthread_poll) 顺序读
+2. libaio vs io_uring(sqthread_poll) 顺序写
+3. libaio vs io_uring(sqthread_poll) 顺序读写 70%读
+4. libaio vs io_uring(sqthread_poll) 顺序读写 70%写
 
 随机IO - 实验libaio和io_uring对比分4组:
-1. libaio vs io_uring(sqthread_pool) 随机读
-2. libaio vs io_uring(sqthread_pool) 随机写
-3. libaio vs io_uring(sqthread_pool) 随机读写 70%读
-4. libaio vs io_uring(sqthread_pool) 随机读写 70%写
+1. libaio vs io_uring(sqthread_poll) 随机读
+2. libaio vs io_uring(sqthread_poll) 随机写
+3. libaio vs io_uring(sqthread_poll) 随机读写 70%读
+4. libaio vs io_uring(sqthread_poll) 随机读写 70%写
 
 ```
 (io_uring)sqthread_poll
@@ -111,6 +111,7 @@ fio_generate_plots libaio-iouring.{seq/rand}
 ```
 
 ### reference
+1. [Diego Didona - Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring](https://www.youtube.com/watch?v=5jKKVdJJqKY)
 2. https://github.com/dgraph-io/badger-bench/blob/master/BENCH-rocks.txt
 3. https://github.com/dgraph-io/badger-bench/blob/master/BENCH-lmdb-bolt.md
 

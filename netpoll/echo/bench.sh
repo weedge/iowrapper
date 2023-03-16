@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 echo $(uname -a)
 
 if [ "$#" -ne 2 ]; then
@@ -11,8 +12,11 @@ curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
 cd $curDir/rust_echo_bench
 
+connectionsArr=(1 50 150 300 500 1000)
+#connectionsArr=(2000)
+
 for bytes in 128 512 1000; do
-	for connections in 1 50 150 300 500 1000; do
+	for connections in ${connectionsArr[*]}; do
     echo "cargo run --release -- --address 'localhost:$1' --number $connections --duration 60 --length $bytes \
         >> $curDir/bench-result/$2.$curDate.txt 2>&1"
    	cargo run --release -- --address "localhost:$1" --number $connections --duration 60 --length $bytes \
