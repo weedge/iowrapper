@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 echo $(uname -a)
 
 if [ "$#" -ne 2 ]; then
@@ -14,17 +15,16 @@ for bytes in 128 512 1000; do
   for connections in 1 50 150 300 500 1000; do
     echo "run benchmarks with c = $connections and len = $bytes"
     RPS_SUM=0
-    for attempt in {1..5}; do
+    for i in `seq 1 5`; do
       $1 $2 &
-      SRV_PID=$!
+      SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
       taskset -cp 0 $SRV_PID
       sleep 1s
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$2" --number $connections --duration 30 --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')
       RPS_SUM=$((RPS_SUM + RPS))
-
-      echo "attempt: $attempt, rps: $RPS "
+      echo "attempt: $i, rps: $RPS "
 
       kill $SRV_PID
       sleep 1s
