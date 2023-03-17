@@ -62,7 +62,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     let port = &args[1];
-    let mut ring = IoUring::new(256)?;
+    let mut ring = IoUring::new(4096)?;
     let listener = TcpListener::bind(("127.0.0.1", port.parse().unwrap()))?;
 
     let mut backlog = VecDeque::new();
@@ -123,7 +123,7 @@ fn main() -> anyhow::Result<()> {
             let token = &mut token_alloc[token_index];
             match token.clone() {
                 Token::Accept => {
-                    println!("accept");
+                    //println!("accept");
 
                     accept.count += 1;
 
@@ -168,7 +168,7 @@ fn main() -> anyhow::Result<()> {
                         bufpool.push(buf_index);
                         token_alloc.remove(token_index);
 
-                        println!("shutdown");
+                        //println!("shutdown");
 
                         unsafe {
                             libc::close(fd);

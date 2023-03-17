@@ -1,16 +1,34 @@
-## io_uring
-1. use liburing see readme, more detail: https://github.com/axboe/liburing <br> use cgo Notice: https://dave.cheney.net/2016/01/18/cgo-is-not-go
+# io_uring
+![io_uring](./docs/io_uring_logo.png)
+## syscall
+1. man syscall or know more: [**<u>linux-insides</u>** SysCall](https://github.com/0xAX/linux-insides/tree/master/SysCall) , [linux-insides-zh SysCall](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)
 
+2. syscall interface (liburing interface wrapper syscall for cpu arch, man liburing help doc learn more):<br>
 ```c
 /*
- * io_uring want learn more see:
- * 1. https://github.com/axboe/liburing
- * 2. https://www.youtube.com/watch?v=-5T4Cjw46ys
- * 3. https://kernel-recipes.org/en/2022/whats-new-with-io_uring/
- * 4. https://lore.kernel.org/io-uring/
- *
+ * System calls
  */
+extern int io_uring_setup(unsigned entries, struct io_uring_params *p);
+extern int io_uring_enter(int fd, unsigned to_submit,
+	unsigned min_complete, unsigned flags, sigset_t *sig);
+extern int io_uring_register(int fd, unsigned int opcode, void *arg,
+	unsigned int nr_args);
 ```
+3. linux kernel v6.3-rc2 interface ( [syscall](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/tools/io_uring/syscall.c) )
+    * io_uring_setup -> syscall  --(soft interrupt)-->> sys_io_uring_setup -> [SYSCALL_DEFINE](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/include/linux/syscalls.h?L226)2() > [sysreturn io_uring_setup](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/io_uring/io_uring.c?L3828)
+    * io_uring_enter -> syscall --(soft interrupt)-->> sys_io_uring_enter ->  [SYSCALL_DEFINE6(sysreturn io_uring_enter)](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/io_uring/io_uring.c?L3392)
+    * io_uring_register -> syscall --(soft interrupt)-->> sys_io_uring_register -> [SYSCALL_DEFINE4(io_uring_register)](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/io_uring/io_uring.c?L4303)
+
+4. see more support [**io_uring_op**](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/include/uapi/linux/io_uring.h?L176)
+
+
+## liburing
+1. use liburing see readme, more detail: https://github.com/axboe/liburing <br> use cgo Notice: https://dave.cheney.net/2016/01/18/cgo-is-not-go <br> io_uring want learn more see those [updating]:
+    * **https://kernel.dk/io_uring.pdf**
+    * https://www.youtube.com/watch?v=-5T4Cjw46ys
+    * **https://kernel.dk/axboe-kr2022.pdf**
+    * https://kernel-recipes.org/en/2022/whats-new-with-io_uring/
+
 ```shell
 # see linux os kernel support uring syscall
 cat /proc/kallsyms | grep uring
@@ -18,30 +36,37 @@ cat /proc/kallsyms | grep uring
 ps --ppid ${pid} | grep io_uring-sq
 ```
 
+2. if need use golang runtime native support, please see this Note: [#31908](https://github.com/golang/go/issues/31908)
 
-2. u need use golang runtime native support, please Note: [#31908](https://github.com/golang/go/issues/31908)
-
-3. 3rd io_uring support for golang https://github.com/hodgesds/iouring-go  https://github.com/godzie44/go-uring 
+3. 3rd io_uring support for golang:
+    * https://github.com/hodgesds/iouring-go 
+    * https://github.com/godzie44/go-uring 
 
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
+## bench scene (net/storage IO)
+1. net IO for netpoll scene
+    * tcp echo server, build & bench:
+    ```shell
+    make build-echo
+    make bench-echo
+    ```
+2. storage IO for data file storage in HDD, NVMe SSD etc hardware scene
 
-
-### learn more try to change io
+## learn more try to change io
 1. badger: https://dgraph.io/blog/post/badger/
 2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
 
 
-### compiling linux kernel for new io_uring feature
+## compiling linux kernel for new io_uring feature
 1. [kernel_compile](https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html)
 2. [the linux kernel archives](https://www.kernel.org/)
 
 
-
-### reference
-1. https://unixism.net/loti/
+## reference
+1. **https://unixism.net/loti/**
 2. https://unixism.net/2020/04/io-uring-by-example-article-series/
 3. windows IORing: https://windows-internals.com/ioring-vs-io_uring-a-comparison-of-windows-and-linux-implementations/ 
-4. [Diego Didona - Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring](https://www.youtube.com/watch?v=5jKKVdJJqKY)
+4. [Diego Didona - **<u>Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring</u>**](https://atlarge-research.com/pdfs/2022-systor-apis.pdf) , [video](https://www.youtube.com/watch?v=5jKKVdJJqKY)
 4. [awesome-iouring](https://github.com/espoal/awesome-iouring)
 
