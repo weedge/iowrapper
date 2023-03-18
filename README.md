@@ -58,10 +58,24 @@ ps --ppid ${pid} | grep io_uring-sq
 2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
 
 
-## compiling linux kernel for new io_uring feature
+## linux kernel for new io_uring feature
+### compiling linux kernel for develop io_uring-** tag branch
 1. [kernel_compile](https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html)
 2. [the linux kernel archives](https://www.kernel.org/)
-
+### upgrade release linux kernel for ubuntu 
+eg: upgrage linux kernel to v6.3-rc2 for Ubuntu 22.04.2 LTS
+```shell
+sudo apt-get upgrade
+sudo apt-get update
+# mainline: https://kernel.ubuntu.com/~kernel-ppa/mainline/?C=N;O=D ; u can chose latest linux kernel
+sudo wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v6.3-rc2/amd64/linux-headers-6.3.0-060300rc2-generic_6.3.0-060300rc2.202303122031_amd64.deb
+sudo wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v6.3-rc2/amd64/linux-headers-6.3.0-060300rc2_6.3.0-060300rc2.202303122031_all.deb
+sudo wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v6.3-rc2/amd64/linux-image-unsigned-6.3.0-060300rc2-generic_6.3.0-060300rc2.202303122031_amd64.deb
+sudo wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v6.3-rc2/amd64/linux-modules-6.3.0-060300rc2-generic_6.3.0-060300rc2.202303122031_amd64.deb
+sudo apt install ./linux-*.deb
+#restart
+sudo reboot
+```
 
 ## reference
 1. **https://unixism.net/loti/**

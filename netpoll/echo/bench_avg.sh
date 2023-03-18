@@ -12,8 +12,7 @@ curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
 #connectionsArr=(1 50 150 300 500 1000)
-connectionsArr=(1000)
-#connectionsArr=(2000)
+connectionsArr=(2000)
 
 for bytes in 128 512 1000; do
   for connections in ${connectionsArr[*]}; do
