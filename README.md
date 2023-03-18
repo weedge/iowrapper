@@ -45,13 +45,13 @@ ps --ppid ${pid} | grep io_uring-sq
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
 ## bench scene (net/storage IO)
-1. net IO for netpoll scene
+1. net IO for netpoll scenes
     * tcp echo server, build & bench:
     ```shell
     make build-echo
     make bench-echo
     ```
-2. storage IO for data file storage in HDD, NVMe SSD etc hardware scene
+2. storage IO for data file storage in HDD, NVMe SSD etc hardware scenes
 
 ## learn more try to change io
 1. badger: https://dgraph.io/blog/post/badger/
@@ -75,6 +75,25 @@ sudo wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v6.3-rc2/amd64/linux
 sudo apt install ./linux-*.deb
 #restart
 sudo reboot
+```
+Develop Tips: 
+* use UTM/VirtualBox/VMware install VM to run;
+* use docker container to run;
+* use vscode ssh remote or devcontainer to develop; recomend dev container with local env;
+* bench net IO , server run in VM or physical machine;
+* bench storage IO , server run in physical machine mount HDD, NVMe SSD etc hardware device;
+
+Bench Tips:
+* Bench net IO, use tcp tools: 
+    * tcpdump check RST;
+    * netstat check es,cw,tw stat and static tcp send recv;
+    * ss static tcp stat;
+* Bench storage IO, use storage IO tools: 
+    * fio bench ioengine, check IOPS;
+    * vmstat check io bi,bo, swap;
+    * iostat check device r/w tps, iowait;
+```shell
+sudo apt install sysstat
 ```
 
 ## reference

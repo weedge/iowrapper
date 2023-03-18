@@ -3,7 +3,7 @@
 #.devcontainer
 
 # vim
-.sw*
+*.sw*
 *~
 
 # cgo
