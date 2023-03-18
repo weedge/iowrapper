@@ -29,6 +29,7 @@ chmod +x ./netpoll/echo/bench.sh
 ./netpoll/echo/bench.sh 8883 epoll_echo_server
 ./netpoll/echo/bench.sh 8884 io_uring_echo_server
 ./netpoll/echo/bench.sh 8882 coroutine_io_uring_echo_server
+./netpoll/echo/bench.sh 8881 tokio_io_uring_echo_server
 
 # or just bench all for avg result
 make bench-echo

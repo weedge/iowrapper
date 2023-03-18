@@ -11,8 +11,8 @@ curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
-#connectionsArr=(1 50 150 300 500 1000)
-connectionsArr=(2000)
+connectionsArr=(1 50 150 300 500 1000 2000)
+#connectionsArr=(3000)
 
 $1 $2 &
 SRV_PID=$!
