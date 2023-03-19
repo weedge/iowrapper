@@ -11,7 +11,7 @@ while true; do
     netstat -ta | grep $1 | grep ESTABLISHED -w | wc -l
     printf "server port $1 CLOSE_WAIT: "
     netstat -ta | grep $1 | grep CLOSE_WAIT -w | wc -l
-    printf "connect port $1 TIME_WAIT: "
+    printf "connect server port $1 TIME_WAIT: "
     netstat -ta | grep $1 | grep TIME_WAIT -w | wc -l
     printf "\n"
     sleep 1

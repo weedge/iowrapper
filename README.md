@@ -41,6 +41,7 @@ ps --ppid ${pid} | grep io_uring-sq
 3. 3rd io_uring support for golang:
     * https://github.com/hodgesds/iouring-go 
     * https://github.com/godzie44/go-uring 
+    * https://github.com/Iceber/iouring-go
 
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
@@ -63,6 +64,7 @@ ps --ppid ${pid} | grep io_uring-sq
 1. [kernel_compile](https://www.cyberciti.biz/tips/compiling-linux-kernel-26.html)
 2. [the linux kernel archives](https://www.kernel.org/)
 ### upgrade release linux kernel for ubuntu 
+https://sypalo.com/how-to-upgrade-ubuntu
 eg: upgrage linux kernel to v6.3-rc2 for Ubuntu 22.04.2 LTS
 ```shell
 sudo apt-get upgrade

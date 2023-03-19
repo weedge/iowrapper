@@ -1,5 +1,5 @@
 [package]
-name = "rust-tokio-iouring-server"
+name = "rust-iouring-server"
 version = "0.1.0"
 edition = "2021"
 
