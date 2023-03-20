@@ -21,8 +21,6 @@ write_barrier();
 ```
 To get the index of the head, the application needs to mask head with the size mask of the ring buffer. Remember that any line in the code above could be running after a context switch. So, right before the comparison, we have a read_barrier() so that, if the kernel has indeed updated the tail, we can read it as part of our comparison in the if statement. Once we get the CQE and process it, we update the head letting the kernel know that we’ve consumed an entry from the ring buffer. The final write_barrier() ensures that writes we do become visible so that the kernel knows about it.
 
----
-
 ## Making a submission
 Making a submission is the opposite of reading a completion. While dealing with completion the kernel added entries to the tail and we read entries off the head of the ring buffer, when making a submission, we add to the tail and kernel reads entries off the head of the submission ring buffer.
 
@@ -43,6 +41,12 @@ write_barrier();
 ```
 
 In the code snippet above, the app_init_io() function in the application fills up details of the request for submission. Before the tail is updated, we have a write_barrier() to ensure that the previous writes are ordered. Then we update the tail and call write_barrier() once more to ensure that our update is seen. We’re lining up our ducks here.
+
+```c
+/* This is x86 specific */
+#define read_barrier()  __asm__ __volatile__("":::"memory")
+#define write_barrier() __asm__ __volatile__("":::"memory")
+```
 
 ## liburing barrier
 [/usr/include/liburing/barrier.h](https://github.com/axboe/liburing/blob/master/src/include/liburing/barrier.h)
