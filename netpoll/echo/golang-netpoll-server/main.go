@@ -31,7 +31,7 @@ func main() {
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	checkErr(err)
 
-	//buffs = initBuffs()
+	buffs = initBuffs()
 	for {
 		conn, err := listener.Accept()
 		checkErr(err)
@@ -40,9 +40,9 @@ func main() {
 }
 
 func handleConn(conn net.Conn) {
-	//f, _ := conn.(*net.TCPConn).File()
-	//buff := buffs[int(f.Fd())]
-	buff := make([]byte, MaxMsgLen)
+	f, _ := conn.(*net.TCPConn).File()
+	buff := buffs[int(f.Fd())]
+	//buff := make([]byte, MaxMsgLen)
 	for {
 		n, err := conn.Read(buff)
 		if err == io.EOF || n == 0 {

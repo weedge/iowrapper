@@ -21,6 +21,10 @@ extern int io_uring_register(int fd, unsigned int opcode, void *arg,
 
 4. see more support [**io_uring_op**](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/include/uapi/linux/io_uring.h?L176)
 
+5. io_uring kernel bug:
+    * [IORING_OP_PROVIDE_BUFFERS](https://yhbt.net/lore/all/20200228203053.25023-1-axboe@kernel.dk/T/)
+    * http://www.aqwu.net/blog/index.php/2022/03/17/io_uring-linux/
+    * https://starlabs.sg/blog/2022/06-io_uring-new-code-new-bugs-and-a-new-exploit-technique/
 
 ## liburing
 1. use liburing see readme, more detail: https://github.com/axboe/liburing <br> use cgo Notice: https://dave.cheney.net/2016/01/18/cgo-is-not-go <br> io_uring want learn more see those [updating]:

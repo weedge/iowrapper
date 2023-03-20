@@ -16,7 +16,7 @@ change to async IO by io_uring liburing
 
 
 
-    // product io sqes to sq
+    // produce io sqes to sq
     /* Get an SQE */
     struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
     /* Setup a readv operation */

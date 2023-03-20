@@ -1,7 +1,12 @@
+## intro
+echo server, just check epoll io_uring in linux; know more linux applications performance history: <br>
+https://unixism.net/2019/04/linux-applications-performance-introduction/
+
 ## echo-server
 from: 
 1. https://github.com/frevib/epoll-echo-server
 2. https://github.com/frevib/io_uring-echo-server
+
 
 ## make && run server
 ```shell
