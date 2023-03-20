@@ -12,7 +12,7 @@ curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
 connectionsArr=(1 50 150 300 500 1000 2000)
-#connectionsArr=(3000)
+#connectionsArr=(2000)
 
 $1 $2 &
 SRV_PID=$!
@@ -20,11 +20,12 @@ SRV_PID=$!
 taskset -cp 0 $SRV_PID
 sleep 3s
 
+runCn=3
 for bytes in 128 512 1000; do
   for connections in ${connectionsArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"
     RPS_SUM=0
-    for i in `seq 1 5`; do
+    for i in `seq 1 3`; do
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$2" --number $connections --duration 30 --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')
@@ -34,7 +35,7 @@ for bytes in 128 512 1000; do
       sleep 3s
     done
 
-    RPS_AVG=$((RPS_SUM/5))
+    RPS_AVG=$((RPS_SUM/runCn))
     echo "average RPS: $RPS_AVG "
   done
 done

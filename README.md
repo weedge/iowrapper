@@ -84,6 +84,7 @@ Develop Tips:
 * use vscode ssh remote or devcontainer to develop; recomend dev container with local env;
 * bench net IO , server run in VM or physical machine;
 * bench storage IO , server run in physical machine mount HDD, NVMe SSD etc hardware device;
+* perf programe, cpu, memery, IO cost
 
 Bench Tips:
 * Bench net IO, use tcp tools: 
@@ -96,7 +97,9 @@ Bench Tips:
     * iostat check device r/w tps, iowait;
 ```shell
 sudo apt install sysstat
+sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 ```
+Tips: more perf tools : https://www.brendangregg.com/linuxperf.html
 
 ## reference
 1. **https://unixism.net/loti/**
