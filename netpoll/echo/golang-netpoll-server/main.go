@@ -28,16 +28,13 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	listener, err := net.ListenTCP("tcp", &net.TCPAddr{
-		Port: port,
-	})
+	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	checkErr(err)
 
 	//buffs = initBuffs()
 	for {
 		conn, err := listener.Accept()
 		checkErr(err)
-
 		go handleConn(conn)
 	}
 }

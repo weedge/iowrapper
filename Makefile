@@ -25,7 +25,7 @@ build-echo:
 	@make -C netpoll/echo/c-iouring-server
 	@make -C netpoll/echo/cpp-coroutine-iouring-server
 	@cargo build --manifest-path netpoll/echo/rust-iouring-server/Cargo.toml --release
-	@go build -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
+	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
 
 
 bench-echo: pre ${target}
