@@ -21,7 +21,7 @@ extern int io_uring_register(int fd, unsigned int opcode, void *arg,
 
 4. see more support [**io_uring_op**](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/include/uapi/linux/io_uring.h?L176)
 
-5. io_uring kernel bug:
+5. io_uring kernel bug (fixed: [io_put_kbuf](https://sourcegraph.com/github.com/torvalds/linux@v6.3-rc2/-/blob/io_uring/kbuf.h?L124)):
     * [IORING_OP_PROVIDE_BUFFERS](https://yhbt.net/lore/all/20200228203053.25023-1-axboe@kernel.dk/T/)
     * http://www.aqwu.net/blog/index.php/2022/03/17/io_uring-linux/
     * https://starlabs.sg/blog/2022/06-io_uring-new-code-new-bugs-and-a-new-exploit-technique/
@@ -46,6 +46,7 @@ ps --ppid ${pid} | grep io_uring-sq
     * https://github.com/hodgesds/iouring-go 
     * https://github.com/godzie44/go-uring 
     * https://github.com/Iceber/iouring-go
+    * https://github.com/ii64/gouring [√] (one to one liburing cp,test coverage ok)
 
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
