@@ -34,10 +34,13 @@ extern int io_uring_register(int fd, unsigned int opcode, void *arg,
     * https://kernel-recipes.org/en/2022/whats-new-with-io_uring/
 
 ```shell
-# see linux os kernel support uring syscall
+# see linux os kernel support uring kernel symbols
 cat /proc/kallsyms | grep uring
-# when use io_uring check sq
-ps --ppid ${pid} | grep io_uring-sq
+#sudo perf list 'io_uring:*'
+#sudo perf stat -e io_uring:io_uring_submit_sqe -- timeout 1 {process}
+
+# when use io_uring check iou-***-*** kernel thread {wrk(work), sqp(sq-poll)} or old version {io_uring-sq(sq-poll)}
+sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", comm, pid);}'
 ```
 
 2. if need use golang runtime native support, please see this Note: [#31908](https://github.com/golang/go/issues/31908)
