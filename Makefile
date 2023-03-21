@@ -27,6 +27,8 @@ build-echo:
 	@cargo build --manifest-path netpoll/echo/rust-iouring-server/Cargo.toml --release
 	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
 
+build-udp:
+	@cargo build --manifest-path netpoll/udp/iouring-worker-pool/Cargo.toml --release
 
 bench-echo: pre ${target}
 

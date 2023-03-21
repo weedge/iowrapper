@@ -36,6 +36,7 @@ extern int io_uring_register(int fd, unsigned int opcode, void *arg,
 ```shell
 # see linux os kernel support uring kernel symbols
 cat /proc/kallsyms | grep uring
+#sudo bpftrace -l | grep io_uring
 #sudo perf list 'io_uring:*'
 #sudo perf stat -e io_uring:io_uring_submit_sqe -- timeout 1 {process}
 
@@ -54,18 +55,21 @@ sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", co
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
 ## bench scene (net/storage IO)
-1. net IO for netpoll scenes
+1. net IO for netpoll scenes (more unbounded work stream requests, S_IFSOCK type fd)
     * tcp echo server, build & bench:
     ```shell
     make build-echo
     make bench-echo
     ```
-2. storage IO for data file storage in HDD, NVMe SSD etc hardware scenes
+2. storage IO for data file storage in HDD, NVMe SSD etc hardware scenes (more bounded work requests, eg: S_IFREG, S_ISBLK type fd)
 
-## learn more try to change io
-1. badger: https://dgraph.io/blog/post/badger/
-2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
+## learn more try to change IO
+* net IO
+* storage IO
+    1. badger: https://dgraph.io/blog/post/badger/
+    2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
 
+open,learn more, u also can do IT :)
 
 ## linux kernel for new io_uring feature
 ### compiling linux kernel for develop io_uring-** tag branch
