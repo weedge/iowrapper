@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+check_iouring_worker_pool?=./check_iouring_worker_pool.sh
 echo_bench_result_dir?=./netpoll/echo/bench-result
 echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
 target ?= \
@@ -56,3 +57,7 @@ rust_io_uring_echo_server:
 	#bench rust_io_uring_echo_server
 	@${echo_bench_avg_shell} netpoll/echo/rust-iouring-server/target/release/rust-iouring-server 8881 \
 		>> ${echo_bench_result_dir}/rust_io_uring_echo_server.`date +"%Y%m%d-%H%M%S"`.txt 2>&1
+
+check_iouring_worker_pool:
+	@${check_iouring_worker_pool}
+

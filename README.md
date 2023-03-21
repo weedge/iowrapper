@@ -39,6 +39,8 @@ cat /proc/kallsyms | grep uring
 #sudo bpftrace -l | grep io_uring
 #sudo perf list 'io_uring:*'
 #sudo perf stat -e io_uring:io_uring_submit_sqe -- timeout 1 {process}
+#sudo perf stat -e io_uring:io_uring_submit_sqe --timeout 1000 -p {pid}
+#sudo perf stat -a -d -d -d --timeout 1000 -p {pid}
 
 # when use io_uring check iou-***-*** kernel thread {wrk(work), sqp(sq-poll)} or old version {io_uring-sq(sq-poll)}
 sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", comm, pid);}'
@@ -69,7 +71,7 @@ sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", co
     1. badger: https://dgraph.io/blog/post/badger/
     2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
 
-open,learn more, u also can do IT :)
+open,learn more, u also can do IT, maybe publish a paper~ :)
 
 ## linux kernel for new io_uring feature
 ### compiling linux kernel for develop io_uring-** tag branch
@@ -103,6 +105,7 @@ Bench Tips:
     * tcpdump check RST;
     * netstat check es,cw,tw stat and static tcp send recv;
     * ss static tcp stat;
+    * mpstat report processors related statistics iowait,sys use;
 * Bench storage IO, use storage IO tools: 
     * fio bench ioengine, check IOPS;
     * vmstat check io bi,bo, swap;
