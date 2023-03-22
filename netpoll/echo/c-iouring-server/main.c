@@ -42,7 +42,7 @@ int group_id = 1337;
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        printf("Please give a port number: ./io_uring_echo_server [port]\n");
+        printf("Please give a port number: ./io_uring_echo_server [port] ([mode]..)\n");
         exit(0);
     }
 
@@ -78,8 +78,17 @@ int main(int argc, char *argv[]) {
     struct io_uring_params params;
     struct io_uring ring;
     memset(&params, 0, sizeof(params));
+    if (argc >= 3) {
+        int res = strcmp(argv[2], "sqp");
+        if (res == 0) {
+            printf("setup sqpoll mode\n");
+            params.flags |= IORING_SETUP_SQPOLL;
+            params.sq_thread_cpu = 4;
+            params.sq_thread_idle = 10000;
+        }
+    }
 
-    if (io_uring_queue_init_params(4096, &ring, &params) < 0) {
+    if (io_uring_queue_init_params(10240, &ring, &params) < 0) {
         perror("io_uring_init_failed...\n");
         exit(1);
     }

@@ -27,3 +27,6 @@ bench-result
 # rust
 Cargo.lock
 target
+
+# golang
+go.work.sum

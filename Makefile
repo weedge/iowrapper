@@ -3,9 +3,10 @@ check_iouring_worker_pool?=./check_iouring_worker_pool.sh
 echo_bench_result_dir?=./netpoll/echo/bench-result
 echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
 target ?= \
-	golang_netpoll_echo_server \
-	c_epoll_echo_server \
+	c_io_uring_echo_server_sqp \
 	#c_io_uring_echo_server \
+	#golang_netpoll_echo_server \
+	#c_epoll_echo_server \
 	#cpp20_coroutine_io_uring_echo_server \
 	#rust_io_uring_echo_server \
 
@@ -47,6 +48,11 @@ c_io_uring_echo_server:
 	#bench io_uring_echo_server
 	@${echo_bench_avg_shell} ./build/io_uring_echo_server 8884 \
 		>> ${echo_bench_result_dir}/io_uring_echo_server.`date +"%Y%m%d-%H%M%S"`.txt 2>&1
+
+c_io_uring_echo_server_sqp:
+	#bench io_uring_echo_server_sqp
+	@${echo_bench_avg_shell} ./build/io_uring_echo_server 8884 sqp \
+		>> ${echo_bench_result_dir}/io_uring_echo_server_sqp.`date +"%Y%m%d-%H%M%S"`.txt 2>&1
 
 cpp20_coroutine_io_uring_echo_server:
 	#bench coroutine_io_uring_echo_server

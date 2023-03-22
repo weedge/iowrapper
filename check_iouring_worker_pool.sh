@@ -6,6 +6,11 @@ udp_read=netpoll/udp/iouring-worker-pool/target/release/udp-read
 
 make build-udp
 
+strace -e io_uring_register $udp_read --async --workers 8 &
+pstree -pt $!
+sleep 3 && kill $!
+
+
 echo "NUMA cpu affinity"
 numactl -H
 echo "\n$udp_read --async --threads 1 --rings 1 --workers 2"

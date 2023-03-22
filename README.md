@@ -43,7 +43,8 @@ cat /proc/kallsyms | grep uring
 #sudo perf stat -a -d -d -d --timeout 1000 -p {pid}
 
 # when use io_uring check iou-***-*** kernel thread {wrk(work), sqp(sq-poll)} or old version {io_uring-sq(sq-poll)}
-sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", comm, pid);}'
+sudo bpftrace --btf -e 'kretprobe:create_io_thread { @[retval] = count(); } interval:s:1 { print(@); clear(@); } END { clear(@); }' | cat -s
+#sudo bpftrace -e 'tracepoint:io_uring:io_uring_submit_sqe {printf("%s(%d)\n", comm, pid);}'
 ```
 
 2. if need use golang runtime native support, please see this Note: [#31908](https://github.com/golang/go/issues/31908)

@@ -1,0 +1,10 @@
+github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
+github.com/iceber/iouring-go v0.0.0-20230308084639-d71579e9084b h1:2HmkKWdVGbWTuXnUoBrR9HMHyjpVRhWcjjmFx5jJ1I4=
+github.com/iceber/iouring-go v0.0.0-20230308084639-d71579e9084b/go.mod h1:LEzdaZarZ5aqROlLIwJ4P7h3+4o71008fSy6wpaEB+s=
+github.com/ii64/gouring v0.4.1 h1:DpZ3Qs2bJwwfccrUcZi0PSvjQGBhixN6LZLcF3gNlzU=
+github.com/ii64/gouring v0.4.1/go.mod h1:kjCxXJr9KZ//6KasL6zqX1DMa71uMjOsdmVskAtHER4=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d h1:L/IKR6COd7ubZrs2oTnTi73IhgqJ71c9s80WsQnh0Es=
+golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
