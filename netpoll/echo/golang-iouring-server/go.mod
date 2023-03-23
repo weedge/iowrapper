@@ -7,6 +7,6 @@ require (
 	github.com/ii64/gouring v0.4.1
 )
 
-require golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
+require golang.org/x/sys v0.1.0 // indirect
 
 // replace github.com/ii64/gouring => ../../../../gouring
