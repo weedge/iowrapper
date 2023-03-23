@@ -1,6 +1,3 @@
-//go:build iouringgo
-// +build iouringgo
-
 package thirdparty
 
 import (
@@ -25,7 +22,7 @@ var (
 	resulter chan iouring.Result
 )
 
-func IOurigGoEchoServer() {
+func IOurigGoEchoServer1() {
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: %s <host:port> (<mod>) \n", os.Args[0])
 		return

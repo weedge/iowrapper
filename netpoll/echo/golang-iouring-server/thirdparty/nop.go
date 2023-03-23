@@ -6,5 +6,5 @@ package thirdparty
 import "log"
 
 func IOurigGoEchoServer() {
-	log.Println("hello world")
+	log.Println("hi, hello world")
 }

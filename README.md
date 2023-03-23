@@ -1,4 +1,10 @@
 # io_uring
+> Very quietly I take my leave,<br>
+> As quietly as I came here;<br>
+> Gently waving my sleeve,<br>
+> I am not taking away a single cloud. - Xu Zhimo
+---
+
 ![io_uring](./docs/io_uring_logo.png)
 ## syscall
 1. man syscall or know more: [**<u>linux-insides</u>** SysCall](https://github.com/0xAX/linux-insides/tree/master/SysCall) , [linux-insides-zh SysCall](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)

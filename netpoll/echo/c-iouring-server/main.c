@@ -207,7 +207,7 @@ void add_accept(struct io_uring *ring, int fd, struct sockaddr *client_addr,
 void add_socket_read(struct io_uring *ring, int fd, unsigned gid,
                      size_t message_size, unsigned flags) {
     struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
-    io_uring_prep_recv(sqe, fd, NULL, message_size, 0);
+    io_uring_prep_recvmsg(sqe, fd, NULL, message_size, 0);
     io_uring_sqe_set_flags(sqe, flags);
     sqe->buf_group = gid;
 
