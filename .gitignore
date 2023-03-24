@@ -30,3 +30,7 @@ target
 
 # golang
 go.work.sum
+
+# tmp
+3rd
+test
