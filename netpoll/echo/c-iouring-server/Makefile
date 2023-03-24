@@ -30,3 +30,21 @@ io_uring_echo_server-local:
 
 debug-local:
 	$(CC) main.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server  ${DEBUG_CCFLAGS} ${LIBURING_FLAGS}
+
+io_uring_echo_server_v1-local:
+	$(CC) io_uring_echo_server_v1.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v1  ${CCFLAGS} ${LIBURING_FLAGS}
+
+debug_v1-local:
+	$(CC) io_uring_echo_server_v1.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v1  ${DEBUG_CCFLAGS} ${LIBURING_FLAGS}
+
+io_uring_echo_server_v2-local:
+	$(CC) io_uring_echo_server_v2.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v2  ${CCFLAGS} ${LIBURING_FLAGS}
+
+debug_v2-local:
+	$(CC) io_uring_echo_server_v2.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v2  ${DEBUG_CCFLAGS} ${LIBURING_FLAGS}
+
+io_uring_echo_server_v3-local:
+	$(CC) io_uring_echo_server_v3.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v3  ${CCFLAGS} ${LIBURING_FLAGS}
+
+debug_v3-local:
+	$(CC) io_uring_echo_server_v3.c ${liburing_dir}/src/liburing.a -o ${build_dir}/io_uring_echo_server_v3  ${DEBUG_CCFLAGS} ${LIBURING_FLAGS}

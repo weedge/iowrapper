@@ -74,11 +74,10 @@ sudo bpftrace --btf -e 'kretprobe:create_io_thread { @[retval] = count(); } inte
 
 ## learn more try to change IO
 * net IO
+    1. redis: https://github.com/redis/redis/pull/9440
 * storage IO
     1. badger: https://dgraph.io/blog/post/badger/
     2. pebble: https://www.cockroachlabs.com/blog/pebble-rocksdb-kv-store/
-
-open,learn more, u also can do IT, maybe publish a paper~ :)
 
 ## linux kernel for new io_uring feature
 ### compiling linux kernel for develop io_uring-** tag branch
@@ -114,7 +113,7 @@ Bench Tips:
     * ss static tcp stat;
     * mpstat report processors related statistics iowait,sys use;
 * Bench storage IO, use storage IO tools: 
-    * fio bench ioengine, check IOPS;
+    * fio bench ioengine, check IOPS, bw;
     * vmstat check io bi,bo, swap;
     * iostat check device r/w tps, iowait;
 ```shell
@@ -128,5 +127,7 @@ Tips: more perf tools : https://www.brendangregg.com/linuxperf.html
 2. https://unixism.net/2020/04/io-uring-by-example-article-series/
 3. windows IORing: https://windows-internals.com/ioring-vs-io_uring-a-comparison-of-windows-and-linux-implementations/ 
 4. [Diego Didona - **<u>Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring</u>**](https://atlarge-research.com/pdfs/2022-systor-apis.pdf) , [video](https://www.youtube.com/watch?v=5jKKVdJJqKY)
-4. [awesome-iouring](https://github.com/espoal/awesome-iouring)
+5. [awesome-iouring](https://github.com/espoal/awesome-iouring)
+6. https://openanolis.cn/sig/high-perf-storage/doc/218455073889779745
+
 
