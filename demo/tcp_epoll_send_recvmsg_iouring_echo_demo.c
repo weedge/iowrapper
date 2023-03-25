@@ -1,55 +1,8 @@
-#include <arpa/inet.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <unistd.h>
-
-#include "liburing.h"
-
-#define MAX_EVENTS 10
-#define MAX_MESSAGE_LEN 1024
-
-void error(char *msg) {
-    perror(msg);
-    printf("erreur...\n");
-    exit(1);
-}
-
-static int create_server_socket(int port) {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        return -1;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(port);
-
-    if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        close(sockfd);
-        return -1;
-    }
-
-    if (listen(sockfd, SOMAXCONN) == -1) {
-        close(sockfd);
-        return -1;
-    }
-
-    printf("epoll echo server listening for connections on port: %d\n", port);
-    return sockfd;
-}
+#include "io_op.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s port\n", argv[0]);
+        fprintf(stderr, "Usage: %s port [mode]\n", argv[0]);
         exit(1);
     }
 
@@ -160,29 +113,30 @@ int main(int argc, char *argv[]) {
                 int bytes_received = cqe->res;
 
                 // int bytes_received = recvmsg(newsockfd, &msg, 0);
-                //  int bytes_received = recv(newsockfd, buffer, MAX_MESSAGE_LEN, 0);
+                // int bytes_received = recv(newsockfd, buffer, MAX_MESSAGE_LEN, 0);
 
                 if (bytes_received <= 0) {
                     epoll_ctl(epollfd, EPOLL_CTL_DEL, newsockfd, NULL);
                     shutdown(newsockfd, SHUT_RDWR);
                 } else {
                     // Echo the received data back to the client
-                    // send(newsockfd, buffer, bytes_received, 0);
+                    struct msghdr s_msg = {0};
                     iov[0].iov_base = buffer;
                     iov[0].iov_len = bytes_received;
-                    msg.msg_iov = iov;
-                    msg.msg_iovlen = 1;
+                    s_msg.msg_iov = iov;
+                    s_msg.msg_iovlen = 1;
 
                     struct io_uring_sqe *sqe;
                     struct io_uring_cqe *cqe;
                     sqe = io_uring_get_sqe(&ring);
-                    io_uring_prep_sendmsg(sqe, newsockfd, &msg, 0);
+                    io_uring_prep_sendmsg(sqe, newsockfd, &s_msg, 0);
                     io_uring_submit(&ring);
                     io_uring_wait_cqe(&ring, &cqe);
                     io_uring_cqe_seen(&ring, cqe);
                     int bytes_sent = cqe->res;
 
                     // int bytes_sent = sendmsg(newsockfd, &msg, 0);
+                    // int bytes_sent = send(newsockfd, buffer, bytes_received, 0);
 
                     if (bytes_sent < 0) {
                         perror("Failed to send data to client");

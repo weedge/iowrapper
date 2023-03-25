@@ -1,45 +1,5 @@
-#include <arpa/inet.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <unistd.h>
-
-#define MAX_EVENTS 10
-#define MAX_MESSAGE_LEN 1024
-
-void error(char *msg);
-
-static int create_server_socket(int port) {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        return -1;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(port);
-
-    if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        close(sockfd);
-        return -1;
-    }
-
-    if (listen(sockfd, SOMAXCONN) == -1) {
-        close(sockfd);
-        return -1;
-    }
-
-    printf("epoll echo server listening for connections on port: %d\n", port);
-    return sockfd;
-}
+#include "io_op.h"
+#include "liburing.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -135,10 +95,4 @@ int main(int argc, char *argv[]) {
         }
     }
     close(sockfd);
-}
-
-void error(char *msg) {
-    perror(msg);
-    printf("erreur...\n");
-    exit(1);
 }

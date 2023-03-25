@@ -236,8 +236,7 @@ int main(int argc, char *argv[]) {
     }
 
     // add first accept sqe to monitor for new incoming connections
-    add_accept(&ring, sock_listen_fd, (struct sockaddr *)&client_addr,
-               &client_len, 0);
+    add_accept(&ring, sock_listen_fd, (struct sockaddr *)&client_addr, &client_len, 0);
 
     while (1) {
         int cqe_count;
