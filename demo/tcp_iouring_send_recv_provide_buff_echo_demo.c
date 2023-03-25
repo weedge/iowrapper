@@ -7,8 +7,6 @@ int main(int argc, char *argv[]) {
     }
 
     int group_id = 1337;
-    char buffer[MAX_MESSAGE_LEN];
-    memset(buffer, 0, sizeof(buffer));
 
     // initialize io_uring
     struct io_uring_params params;
