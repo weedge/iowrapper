@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "*.rs": "rust",
+        "coroutine": "cpp",
+        "liburing.h": "c",
+        "io_op.h": "c"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4 ,TabWidth: 4, ColumnLimit: 0}",
+    "C_Cpp.formatting": "default",
+    "rust-analyzer.linkedProjects": [
+        "netpoll/echo/rust-iouring-server/Cargo.toml",
+        "netpoll/udp/iouring-worker-pool/Cargo.toml",
+    ],
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.default.includePath": [
+        "${cmd}/iouring/liburing/include"
+    ],
+    "go.buildFlags": [
+        //"-tags=iouringgo"
+        "-tags=goiouring"
+    ],
+    "go.testFlags": [
+        //"iouringgo",
+        "goiouring",
+    ],
+}

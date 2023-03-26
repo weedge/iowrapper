@@ -21,13 +21,11 @@
 #define MAX_MESSAGE_LEN 2048
 #define BUFFERS_COUNT MAX_CONNECTIONS
 
-void add_accept(struct io_uring *ring, int fd, struct sockaddr *client_addr,
-                socklen_t *client_len, unsigned flags);
-void add_socket_read(struct io_uring *ring, int fd, unsigned gid, size_t size,
-                     unsigned flags);
-void add_socket_write(struct io_uring *ring, int fd, __u16 bid, size_t size,
-                      unsigned flags);
-void add_provide_buf(struct io_uring *ring, __u16 bid, unsigned gid);
+void add_accept(struct io_uring* ring, int fd, struct sockaddr* client_addr, socklen_t* client_len,
+                unsigned flags);
+void add_socket_read(struct io_uring* ring, int fd, unsigned gid, size_t size, unsigned flags);
+void add_socket_write(struct io_uring* ring, int fd, __u16 bid, size_t size, unsigned flags);
+void add_provide_buf(struct io_uring* ring, __u16 bid, unsigned gid);
 
 enum {
     ACCEPT,
@@ -51,22 +49,35 @@ struct conn_task {
         conn_task get_return_object() {
             return conn_task{Handle::from_promise(*this)};
         }
-        std::suspend_always initial_suspend() noexcept { return {}; }
-        std::suspend_never final_suspend() noexcept { return {}; }
-        void return_void() noexcept {}
-        void unhandled_exception() noexcept {}
-        struct io_uring *ring;
+        std::suspend_always initial_suspend() noexcept {
+            return {};
+        }
+        std::suspend_never final_suspend() noexcept {
+            return {};
+        }
+        void return_void() noexcept {
+        }
+        void unhandled_exception() noexcept {
+        }
+        struct io_uring* ring;
         struct conn_info conn_info;
         size_t res;
     };
-    explicit conn_task(promise_type::Handle handler) : handler(handler) {}
-    void destroy() { handler.destroy(); }
-    conn_task(const conn_task &) = delete;
-    conn_task &operator=(const conn_task &) = delete;
-    conn_task(conn_task &&t) noexcept : handler(t.handler) { t.handler = {}; }
-    conn_task &operator=(conn_task &&t) noexcept {
-        if (this == &t) return *this;
-        if (handler) handler.destroy();
+    explicit conn_task(promise_type::Handle handler) : handler(handler) {
+    }
+    void destroy() {
+        handler.destroy();
+    }
+    conn_task(const conn_task&) = delete;
+    conn_task& operator=(const conn_task&) = delete;
+    conn_task(conn_task&& t) noexcept : handler(t.handler) {
+        t.handler = {};
+    }
+    conn_task& operator=(conn_task&& t) noexcept {
+        if (this == &t)
+            return *this;
+        if (handler)
+            handler.destroy();
         handler = t.handler;
         t.handler = {};
         return *this;
@@ -76,10 +87,12 @@ struct conn_task {
 
 auto echo_read(size_t message_size, unsigned flags) {
     struct awaitable {
-        bool await_ready() { return false; }
+        bool await_ready() {
+            return false;
+        }
         void await_suspend(std::coroutine_handle<conn_task::promise_type> h) {
-            auto &p = h.promise();
-            struct io_uring_sqe *sqe = io_uring_get_sqe(p.ring);
+            auto& p = h.promise();
+            struct io_uring_sqe* sqe = io_uring_get_sqe(p.ring);
             io_uring_prep_recv(sqe, p.conn_info.fd, NULL, message_size, 0);
             io_uring_sqe_set_flags(sqe, flags);
             sqe->buf_group = group_id;
@@ -87,27 +100,32 @@ auto echo_read(size_t message_size, unsigned flags) {
             memcpy(&sqe->user_data, &p.conn_info, sizeof(conn_info));
             this->p = &p;
         }
-        size_t await_resume() { return p->res; }
+        size_t await_resume() {
+            return p->res;
+        }
         size_t message_size;
         unsigned flags;
-        conn_task::promise_type *p = NULL;
+        conn_task::promise_type* p = NULL;
     };
     return awaitable{message_size, flags};
 }
 
 auto echo_write(size_t message_size, unsigned flags) {
     struct awaitable {
-        bool await_ready() { return false; }
+        bool await_ready() {
+            return false;
+        }
         void await_suspend(std::coroutine_handle<conn_task::promise_type> h) {
-            auto &p = h.promise();
-            struct io_uring_sqe *sqe = io_uring_get_sqe(p.ring);
-            io_uring_prep_send(sqe, p.conn_info.fd, &bufs[p.conn_info.bid],
-                               message_size, 0);
+            auto& p = h.promise();
+            struct io_uring_sqe* sqe = io_uring_get_sqe(p.ring);
+            io_uring_prep_send(sqe, p.conn_info.fd, &bufs[p.conn_info.bid], message_size, 0);
             io_uring_sqe_set_flags(sqe, flags);
             p.conn_info.type = WRITE;
             memcpy(&sqe->user_data, &p.conn_info, sizeof(conn_info));
         }
-        size_t await_resume() { return 0; }
+        size_t await_resume() {
+            return 0;
+        }
         size_t message_size;
         unsigned flags;
     };
@@ -116,17 +134,21 @@ auto echo_write(size_t message_size, unsigned flags) {
 
 auto echo_add_buffer() {
     struct awaitable {
-        bool await_ready() { return false; }
+        bool await_ready() {
+            return false;
+        }
         void await_suspend(std::coroutine_handle<conn_task::promise_type> h) {
-            auto &p = h.promise();
-            struct io_uring_sqe *sqe = io_uring_get_sqe(p.ring);
-            io_uring_prep_provide_buffers(sqe, bufs[p.conn_info.bid], MAX_MESSAGE_LEN,
-                                          1, group_id, p.conn_info.bid);
+            auto& p = h.promise();
+            struct io_uring_sqe* sqe = io_uring_get_sqe(p.ring);
+            io_uring_prep_provide_buffers(sqe, bufs[p.conn_info.bid], MAX_MESSAGE_LEN, 1, group_id,
+                                          p.conn_info.bid);
             p.conn_info.type = PROV_BUF;
             memcpy(&sqe->user_data, &p.conn_info, sizeof(conn_info));
             h.resume();
         }
-        size_t await_resume() { return 0; }
+        size_t await_resume() {
+            return 0;
+        }
     };
     return awaitable{};
 }
@@ -147,9 +169,11 @@ conn_task handle_echo(int fd) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 2) {
-        printf("Please give a port number: ./io_uring_echo_server [port]\n");
+        printf(
+            "Please give a port number: ./io_uring_echo_server "
+            "[port]\n");
         exit(0);
     }
 
@@ -169,8 +193,7 @@ int main(int argc, char *argv[]) {
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
     // bind and listen
-    if (bind(sock_listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) <
-        0) {
+    if (bind(sock_listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("Error binding socket...\n");
         exit(1);
     }
@@ -178,8 +201,10 @@ int main(int argc, char *argv[]) {
         perror("Error listening on socket...\n");
         exit(1);
     }
-    printf("io_uring echo server listening for connections on port: %d\n",
-           portno);
+    printf(
+        "io_uring echo server listening for connections on port: "
+        "%d\n",
+        portno);
 
     // initialize io_uring
     struct io_uring_params params;
@@ -193,12 +218,14 @@ int main(int argc, char *argv[]) {
 
     // check if IORING_FEAT_FAST_POLL is supported
     if (!(params.features & IORING_FEAT_FAST_POLL)) {
-        printf("IORING_FEAT_FAST_POLL not available in the kernel, quiting...\n");
+        printf(
+            "IORING_FEAT_FAST_POLL not available in the kernel, "
+            "quiting...\n");
         exit(0);
     }
 
     // check if buffer selection is supported
-    struct io_uring_probe *probe;
+    struct io_uring_probe* probe;
     probe = io_uring_get_probe_ring(&ring);
     if (!probe || !io_uring_opcode_supported(probe, IORING_OP_PROVIDE_BUFFERS)) {
         printf("Buffer select not supported, skipping...\n");
@@ -207,12 +234,11 @@ int main(int argc, char *argv[]) {
     // free(probe);
 
     // register buffers for buffer selection
-    struct io_uring_sqe *sqe;
-    struct io_uring_cqe *cqe;
+    struct io_uring_sqe* sqe;
+    struct io_uring_cqe* cqe;
 
     sqe = io_uring_get_sqe(&ring);
-    io_uring_prep_provide_buffers(sqe, bufs, MAX_MESSAGE_LEN, BUFFERS_COUNT,
-                                  group_id, 0);
+    io_uring_prep_provide_buffers(sqe, bufs, MAX_MESSAGE_LEN, BUFFERS_COUNT, group_id, 0);
 
     io_uring_submit(&ring);
     io_uring_wait_cqe(&ring, &cqe);
@@ -223,13 +249,12 @@ int main(int argc, char *argv[]) {
     io_uring_cqe_seen(&ring, cqe);
 
     // add first accept SQE to monitor for new incoming connections
-    add_accept(&ring, sock_listen_fd, (struct sockaddr *)&client_addr,
-               &client_len, 0);
+    add_accept(&ring, sock_listen_fd, (struct sockaddr*)&client_addr, &client_len, 0);
 
     // start event loop
     while (1) {
         io_uring_submit_and_wait(&ring, 1);
-        struct io_uring_cqe *cqe;
+        struct io_uring_cqe* cqe;
         unsigned head;
         unsigned count = 0;
 
@@ -242,7 +267,8 @@ int main(int argc, char *argv[]) {
             int type = conn_i.type;
             if (cqe->res == -ENOBUFS) {
                 fprintf(stdout,
-                        "bufs in automatic buffer selection empty, this should not "
+                        "bufs in automatic buffer selection empty, "
+                        "this should not "
                         "happen...\n");
                 fflush(stdout);
                 exit(1);
@@ -256,25 +282,24 @@ int main(int argc, char *argv[]) {
                 // only read when there is no error, >= 0
                 if (sock_conn_fd >= 0) {
                     connections.emplace(sock_conn_fd, handle_echo(sock_conn_fd));
-                    auto &h = connections.at(sock_conn_fd).handler;
-                    auto &p = h.promise();
+                    auto& h = connections.at(sock_conn_fd).handler;
+                    auto& p = h.promise();
                     p.conn_info.fd = sock_conn_fd;
                     p.ring = &ring;
                     h.resume();
                 }
 
-                // new connected client; read data from socket and re-add accept to
-                // monitor for new connections
-                add_accept(&ring, sock_listen_fd, (struct sockaddr *)&client_addr,
-                           &client_len, 0);
+                // new connected client; read data from socket and
+                // re-add accept to monitor for new connections
+                add_accept(&ring, sock_listen_fd, (struct sockaddr*)&client_addr, &client_len, 0);
             } else if (type == READ) {
-                auto &h = connections.at(conn_i.fd).handler;
-                auto &p = h.promise();
+                auto& h = connections.at(conn_i.fd).handler;
+                auto& p = h.promise();
                 p.conn_info.bid = cqe->flags >> 16;
                 p.res = cqe->res;
                 h.resume();
             } else if (type == WRITE) {
-                auto &h = connections.at(conn_i.fd).handler;
+                auto& h = connections.at(conn_i.fd).handler;
                 h.resume();
             }
         }
@@ -283,9 +308,9 @@ int main(int argc, char *argv[]) {
     }
 }
 
-void add_accept(struct io_uring *ring, int fd, struct sockaddr *client_addr,
-                socklen_t *client_len, unsigned flags) {
-    struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
+void add_accept(struct io_uring* ring, int fd, struct sockaddr* client_addr, socklen_t* client_len,
+                unsigned flags) {
+    struct io_uring_sqe* sqe = io_uring_get_sqe(ring);
     io_uring_prep_accept(sqe, fd, client_addr, client_len, 0);
     io_uring_sqe_set_flags(sqe, flags);
 

@@ -14,6 +14,7 @@ target ?= \
 help:
 	@echo "build-echo"
 	@echo "bench-echo"
+
 pre:
 	@mkdir -p ${echo_bench_result_dir}
 	@chmod +x ${echo_bench_avg_shell};
@@ -22,7 +23,12 @@ cargo:
 	@curl https://sh.rustup.rs -sSf | sh
 	@source "${HOME}/.cargo/env"
 
-build-echo:
+init:
+	@git submodule init
+	@git submodule update
+	@make -C iouring/liburing
+
+build-echo: init
 	@make -C netpoll/echo/c-epoll-server
 	@make -C netpoll/echo/c-iouring-server
 	@make -C netpoll/echo/cpp-coroutine-iouring-server
