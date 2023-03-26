@@ -1,3 +1,6 @@
 go 1.19
 
-use ./netpoll/echo/golang-iouring-server
+use (
+	./iouring
+	./netpoll/echo/golang-iouring-server
+)
