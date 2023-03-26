@@ -120,7 +120,11 @@ Bench Tips:
 sudo apt install sysstat
 sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 ```
-Tips: more perf tools : https://www.brendangregg.com/linuxperf.html
+[Perf](https://en.wikipedia.org/wiki/Perf_(Linux)) tools: 
+* pprof(go): https://github.com/google/pprof
+* gperftools(c/c++): https://github.com/gperftools/gperftools 
+* [Linux kernel profiling with perf tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
+* more perf tools : https://www.brendangregg.com/linuxperf.html
 
 ## reference
 1. **https://unixism.net/loti/**
