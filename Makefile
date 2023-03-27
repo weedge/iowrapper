@@ -44,7 +44,7 @@ bench-echo: pre ${target}
 
 golang_iouring_echo_server:
 	#bench golang_iouring_echo_server
-	@${echo_bench_avg_shell} ./build/golang_iouring_echo_server :8888 \
+	@${echo_bench_avg_shell} ./build/golang_iouring_echo_server 8888 \
 		>> ${echo_bench_result_dir}/golang_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.txt 2>&1
 
 golang_netpoll_echo_server:
