@@ -130,6 +130,7 @@ func IOurigGoEchoServer() {
 			params.Flags |= gouring.IORING_SETUP_SQPOLL
 			params.SqThreadCpu = uint32(1)
 			params.SqThreadIdle = uint32(10000)
+			println("sql mod setup")
 		}
 	}
 
@@ -152,6 +153,12 @@ func IOurigGoEchoServer() {
 	ProduceSocketListenAcceptSqe(ring, lfd, 0)
 
 	for {
+		_, err := ring.SubmitAndWait(1)
+		if err != nil {
+			log.Printf("[error] ring submit %s", err.Error())
+			return
+		}
+
 		var cqe *gouring.IoUringCqe
 		err = ring.WaitCqe(&cqe)
 		if err != nil {
@@ -160,7 +167,8 @@ func IOurigGoEchoServer() {
 		}
 
 		eventInfo := (*EventInfo)(cqe.UserData.GetUnsafe())
-		log.Printf("eventInfo: %+v res:%+v", eventInfo, cqe.Res)
+		//log.Printf("eventInfo: %+v res:%+v", eventInfo, cqe.Res)
+
 		switch eventInfo.etype {
 		case ETypeAccept:
 			connFd := cqe.Res
@@ -170,32 +178,31 @@ func IOurigGoEchoServer() {
 				break
 			}
 
-			log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr)
+			//log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr)
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
 			ProduceSocketListenAcceptSqe(ring, lfd, 0)
 			// IOSQE_BUFFER_SELECT: select buffer for read with IORING_OP_PROVIDE_BUFFERS command
 			//ProduceSocketConnRecvMsgSqe(ring, int(connFd),gouring.IOSQE_BUFFER_SELECT)
-			ProduceSocketConnRecvMsgSqe(ring, int(connFd), &clientAddr, 0)
+			ProduceSocketConnRecvSqe(ring, int(connFd), 0)
 
 		case ETypeRead:
 			readBytesLen := cqe.Res
 			ring.SeenCqe(cqe)
-			if readBytesLen < 0 {
+			if readBytesLen <= 0 {
 				log.Printf("[error] read errNO %d", cqe.Res)
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
 				syscall.Close(eventInfo.cfd)
 				break
 			}
-			if readBytesLen == 0 {
-				log.Printf("[warn] empty request!\n")
-			}
-			log.Printf("Received %d bytes from client %+v\n", readBytesLen, clientAddr)
+
+			//log.Printf("Received %d bytes from client %+v\n", readBytesLen, clientAddr)
 
 			// bytes have been read into connected fd bufs, now add write to socket sqe
-			ProduceSocketConnSendMsgSqe(ring, eventInfo.cfd, &clientAddr, int(readBytesLen), 0)
+			//ProduceSocketConnSendMsgSqe(ring, eventInfo.cfd, &clientAddr, int(readBytesLen), 0)
+			ProduceSocketConnSendSqe(ring, eventInfo.cfd, int(readBytesLen), 0)
 
 		case ETypeWrite:
 			writeBytesLen := cqe.Res
@@ -211,15 +218,15 @@ func IOurigGoEchoServer() {
 				log.Printf("[warn] empty response!\n")
 			}
 
-			log.Printf("Echoed %d bytes to client %+v\n", writeBytesLen, clientAddr)
+			//log.Printf("Echoed %d bytes to client %+v\n", writeBytesLen, clientAddr)
 
-			ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
+			//ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
+			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
 
 		default:
 			ring.SeenCqe(cqe)
 			log.Panicf("unsupport event type %d\n", eventInfo.etype)
 		}
-
 	}
 
 }
@@ -234,10 +241,36 @@ func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
 		etype: ETypeAccept,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit accept %s", err.Error())
+}
+
+func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
+	buff := buffs[cfd]
+
+	sqe := ring.GetSqe()
+	gouring.PrepRecv(sqe, cfd, &buff[0], len(buff), uint(flags))
+	sqe.Flags = flags
+
+	connInfo := EventInfo{
+		cfd:   cfd,
+		etype: ETypeRead,
 	}
+	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
+
+}
+
+func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
+	buff := buffs[cfd]
+
+	sqe := ring.GetSqe()
+	gouring.PrepSend(sqe, cfd, &buff[0], msgSize, uint(flags))
+	sqe.Flags = flags
+
+	connInfo := EventInfo{
+		cfd:   cfd,
+		etype: ETypeWrite,
+	}
+	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
+
 }
 
 func ProduceSocketConnRecvMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, flags uint8) {
@@ -261,10 +294,6 @@ func ProduceSocketConnRecvMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.Ra
 		etype: ETypeRead,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit recvmsg %s", err.Error())
-	}
 }
 
 func ProduceSocketConnSendMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, msgSize int, flags uint8) {
@@ -289,10 +318,6 @@ func ProduceSocketConnSendMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.Ra
 		etype: ETypeWrite,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit sendmsg%s", err.Error())
-	}
 }
 
 func ProduceSocketConnRecvMsgSqeByBuff(ring *gouring.IoUring, cfd int, guid uint16, msgSize int, flags uint8) {

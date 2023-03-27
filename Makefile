@@ -3,9 +3,10 @@ check_iouring_worker_pool?=./check_iouring_worker_pool.sh
 echo_bench_result_dir?=./netpoll/echo/bench-result
 echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
 target ?= \
-	c_io_uring_echo_server_sqp \
-	#c_io_uring_echo_server \
+	golang_iouring_echo_server \
 	#golang_netpoll_echo_server \
+	#c_io_uring_echo_server_sqp \
+	#c_io_uring_echo_server \
 	#c_epoll_echo_server \
 	#cpp20_coroutine_io_uring_echo_server \
 	#rust_io_uring_echo_server \
@@ -34,11 +35,17 @@ build-echo: init
 	@make -C netpoll/echo/cpp-coroutine-iouring-server
 	@cargo build --manifest-path netpoll/echo/rust-iouring-server/Cargo.toml --release
 	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
+	@go build -v -ldflags="-s -w" -tags goiouring -o ./build/golang_iouring_echo_server netpoll/echo/golang-iouring-server/main.go
 
 build-udp:
 	@cargo build --manifest-path netpoll/udp/iouring-worker-pool/Cargo.toml --release
 
 bench-echo: pre ${target}
+
+golang_iouring_echo_server:
+	#bench golang_iouring_echo_server
+	@${echo_bench_avg_shell} ./build/golang_iouring_echo_server :8888 \
+		>> ${echo_bench_result_dir}/golang_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.txt 2>&1
 
 golang_netpoll_echo_server:
 	#bench golang_netpoll_echo_server

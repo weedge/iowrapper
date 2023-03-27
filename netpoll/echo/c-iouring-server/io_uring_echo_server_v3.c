@@ -24,14 +24,6 @@ static void add_accept(struct io_uring* ring, int fd, struct sockaddr* client_ad
                        socklen_t* client_len, unsigned flags);
 static void add_poll_read(struct io_uring* ring, int fd, size_t size, int is_poll);
 static void add_socket_write(struct io_uring* ring, int fd, size_t size, unsigned flags);
-static void add_socket_recv_echo_msg(struct io_uring* ring, int fd, size_t size, unsigned flags);
-static void add_socket_recvmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               unsigned flags);
-
-static void add_socket_send_echo_msg(struct io_uring* ring, int fd, size_t size,
-                                     struct sockaddr_in* client_addr, unsigned flags);
-static void add_socket_sendmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               struct sockaddr_in* client_addr, unsigned flags);
 
 static struct io_uring_params params;
 static struct io_uring ring;
@@ -246,7 +238,7 @@ int main(int argc, char* argv[]) {
 
         cqe_count = io_uring_peek_batch_cqe(&ring, cqes, sizeof(cqes) / sizeof(cqes[0]));
         // if (cqe_count < 1)
-        printf("haha %d\n", cqe_count);
+        // printf("haha %d\n", cqe_count);
         for (i = 0; i < cqe_count; ++i) {
             struct io_uring_cqe* cqe = cqes[i];
             struct conn_info* user_data = (struct conn_info*)io_uring_cqe_get_data(cqe);
@@ -298,7 +290,7 @@ int main(int argc, char* argv[]) {
                 io_uring_cqe_seen(&ring, cqe);
                 // add_socket_read(&ring, user_data->fd, msg_len, 0);
             } else if (type == POLL_IN_READY) {
-                printf("poll in event\n");
+                // printf("poll in event\n");
                 add_poll_read(&ring, user_data->fd, msg_len, 0);
                 io_uring_cqe_seen(&ring, cqe);
             } else {
@@ -358,77 +350,6 @@ static void add_socket_write(struct io_uring* ring, int fd, size_t size, unsigne
         // sqe->flags |= IOSQE_FIXED_FILE | IOSQE_CQE_SKIP_SUCCESS;
         sqe->flags |= IOSQE_FIXED_FILE;
     }
-
-    conn_i->fd = fd;
-    conn_i->type = WRITE;
-    io_uring_sqe_set_data(sqe, conn_i);
-}
-
-static void add_socket_recv_echo_msg(struct io_uring* ring, int fd, size_t size, unsigned flags) {
-    struct iovec iov[1];
-    iov[0].iov_base = bufs[fd];
-    iov[0].iov_len = size;
-    add_socket_recvmsg(ring, fd, &iov[0], 1, flags);
-}
-
-static void add_socket_recvmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               unsigned flags) {
-    struct msghdr msg = {0};
-    struct io_uring_sqe* sqe = io_uring_get_sqe(ring);
-
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    msg.msg_iov = iov;
-    msg.msg_iovlen = iov_len;
-
-    io_uring_prep_recvmsg(sqe, fd, &msg, 0);
-    io_uring_sqe_set_flags(sqe, flags);
-
-    if (registerfiles)
-        sqe->flags |= IOSQE_FIXED_FILE;
-
-    conn_info* conn_i = &conns_read[fd];
-    conn_i->fd = fd;
-    conn_i->type = READ;
-    io_uring_sqe_set_data(sqe, conn_i);
-}
-
-static void add_socket_send_echo_msg(struct io_uring* ring, int fd, size_t size,
-                                     struct sockaddr_in* client_addr, unsigned flags) {
-    struct iovec iov[1];
-    iov[0].iov_base = bufs[fd];
-    iov[0].iov_len = size;
-    add_socket_sendmsg(ring, fd, &iov[0], 1, client_addr, flags);
-}
-
-static void add_socket_sendmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               struct sockaddr_in* client_addr, unsigned flags) {
-    /*
-    static char str[] = "This is a test of sendmsg and recvmsg over io_uring!";
-    struct iovec iov = {
-        .iov_base = str,
-        .iov_len = sizeof(str),
-    };
-    */
-
-    struct msghdr msg;
-
-    struct io_uring_sqe* sqe = io_uring_get_sqe(ring);
-    conn_info* conn_i = &conns_write[fd];
-
-    memset(&msg, 0, sizeof(msg));
-    // msg.msg_name = &client_addr;
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    msg.msg_iov = iov;
-    msg.msg_iovlen = iov_len;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
-    io_uring_prep_sendmsg(sqe, fd, &msg, 0);
-
-    io_uring_sqe_set_flags(sqe, flags);
-    if (registerfiles)
-        sqe->flags |= IOSQE_FIXED_FILE;
 
     conn_i->fd = fd;
     conn_i->type = WRITE;

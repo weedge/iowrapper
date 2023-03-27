@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
@@ -27,6 +29,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	go func() {
+		if err := http.ListenAndServe(":6060", nil); err != nil {
+			log.Fatalf("pprof failed: %v", err)
+		}
+	}()
 
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	checkErr(err)

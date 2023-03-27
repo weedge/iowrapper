@@ -111,12 +111,13 @@ Bench Tips:
     * tcpdump check RST;
     * netstat check es,cw,tw stat and static tcp send recv;
     * ss static tcp stat;
-    * mpstat report processors related statistics iowait,sys use;
+    * <u>dstat</u> report processors related statistics iowait,sys use;,send,recv;
 * Bench storage IO, use storage IO tools: 
     * fio bench ioengine, check IOPS, bw;
     * vmstat check io bi,bo, swap;
     * iostat check device r/w tps, iowait;
 ```shell
+sudo apt install dstat
 sudo apt install sysstat
 sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 ```

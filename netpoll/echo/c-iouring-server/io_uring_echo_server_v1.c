@@ -25,15 +25,6 @@ static void add_accept(struct io_uring* ring, int fd, struct sockaddr* client_ad
 static void add_socket_read(struct io_uring* ring, int fd, size_t size, unsigned flags);
 static void add_socket_write(struct io_uring* ring, int fd, size_t size, unsigned flags);
 
-static void add_socket_recv_echo_msg(struct io_uring* ring, int fd, size_t size, unsigned flags);
-static void add_socket_recvmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               unsigned flags);
-
-static void add_socket_send_echo_msg(struct io_uring* ring, int fd, size_t size,
-                                     struct sockaddr_in* client_addr, unsigned flags);
-static void add_socket_sendmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               struct sockaddr_in* client_addr, unsigned flags);
-
 static struct io_uring_params params;
 static struct io_uring ring;
 static int portno;
@@ -43,7 +34,6 @@ static int* registered_files;
 
 static int max_connections = 65536;
 static int msg_len = 128;
-static char control[CMSG_SPACE(sizeof(int))];
 
 enum {
     ACCEPT,
@@ -270,45 +260,29 @@ int main(int argc, char* argv[]) {
                  * connections
                  */
                 add_accept(&ring, sock_listen_fd, (struct sockaddr*)&client_addr, &client_len, 0);
-                add_socket_recv_echo_msg(&ring, sock_conn_fd, msg_len, 0);
-                // add_socket_read(&ring, sock_conn_fd, msg_len, 0);
+                add_socket_read(&ring, sock_conn_fd, msg_len, 0);
             } else if (type == READ) {
                 int bytes_read = cqe->res;
                 workload();
                 if (bytes_read <= 0) {
-                    fprintf(stderr, "read failed: conn_fd %d bytes_read %d\n", user_data->fd,
-                            bytes_read);
-                    // no bytes available on socket, client must be disconnected
+                    // fprintf(stderr, "read failed: conn_fd %d bytes_read %d\n", user_data->fd,
+                    // bytes_read);
+                    //  no bytes available on socket, client must be disconnected
                     io_uring_cqe_seen(&ring, cqe);
                     shutdown(user_data->fd, SHUT_RDWR);
                     close(user_data->fd);
                 } else {
                     // bytes have been read into bufs, now add write to socket sqe
                     io_uring_cqe_seen(&ring, cqe);
-                    // add_socket_write(&ring, user_data->fd, bytes_read, 0);
-                    add_socket_send_echo_msg(&ring, user_data->fd, bytes_read, &client_addr, 0);
+                    add_socket_write(&ring, user_data->fd, bytes_read, 0);
                 }
             } else if (type == WRITE) {
                 // write to socket completed, re-add socket read
                 io_uring_cqe_seen(&ring, cqe);
-                // add_socket_read(&ring, user_data->fd, msg_len, 0);
-                add_socket_recv_echo_msg(&ring, user_data->fd, msg_len, 0);
+                add_socket_read(&ring, user_data->fd, msg_len, 0);
             }
         }
     }
-}
-
-static void init_iov(struct iovec iov[MAX_IOV_COUNT], int iov_to_use, char* buf, int max_len) {
-    int i, last_idx = iov_to_use - 1;
-
-    assert(0 < iov_to_use && iov_to_use <= MAX_IOV_COUNT);
-    for (i = 0; i < last_idx; ++i) {
-        iov[i].iov_base = buf + i;
-        iov[i].iov_len = 1;
-    }
-
-    iov[last_idx].iov_base = buf + last_idx;
-    iov[last_idx].iov_len = max_len - last_idx;
 }
 
 static void add_accept(struct io_uring* ring, int fd, struct sockaddr* client_addr,
@@ -345,77 +319,6 @@ static void add_socket_write(struct io_uring* ring, int fd, size_t size, unsigne
     conn_info* conn_i = &conns[fd];
 
     io_uring_prep_send(sqe, fd, bufs[fd], size, 0);
-    io_uring_sqe_set_flags(sqe, flags);
-    if (registerfiles)
-        sqe->flags |= IOSQE_FIXED_FILE;
-
-    conn_i->fd = fd;
-    conn_i->type = WRITE;
-    io_uring_sqe_set_data(sqe, conn_i);
-}
-
-static void add_socket_recv_echo_msg(struct io_uring* ring, int fd, size_t size, unsigned flags) {
-    struct iovec iov[1];
-    iov[0].iov_base = bufs[fd];
-    iov[0].iov_len = size;
-    add_socket_recvmsg(ring, fd, &iov[0], 1, flags);
-}
-
-static void add_socket_recvmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               unsigned flags) {
-    struct msghdr msg = {0};
-    struct io_uring_sqe* sqe = io_uring_get_sqe(ring);
-
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    msg.msg_iov = iov;
-    msg.msg_iovlen = iov_len;
-
-    io_uring_prep_recvmsg(sqe, fd, &msg, 0);
-    io_uring_sqe_set_flags(sqe, flags);
-
-    if (registerfiles)
-        sqe->flags |= IOSQE_FIXED_FILE;
-
-    conn_info* conn_i = &conns[fd];
-    conn_i->fd = fd;
-    conn_i->type = READ;
-    io_uring_sqe_set_data(sqe, conn_i);
-}
-
-static void add_socket_send_echo_msg(struct io_uring* ring, int fd, size_t size,
-                                     struct sockaddr_in* client_addr, unsigned flags) {
-    struct iovec iov[1];
-    iov[0].iov_base = bufs[fd];
-    iov[0].iov_len = size;
-    add_socket_sendmsg(ring, fd, &iov[0], 1, client_addr, flags);
-}
-
-static void add_socket_sendmsg(struct io_uring* ring, int fd, struct iovec* iov, int iov_len,
-                               struct sockaddr_in* client_addr, unsigned flags) {
-    /*
-    static char str[] = "This is a test of sendmsg and recvmsg over io_uring!";
-    struct iovec iov = {
-        .iov_base = str,
-        .iov_len = sizeof(str),
-    };
-    */
-
-    struct msghdr msg;
-
-    struct io_uring_sqe* sqe = io_uring_get_sqe(ring);
-    conn_info* conn_i = &conns[fd];
-
-    memset(&msg, 0, sizeof(msg));
-    // msg.msg_name = &client_addr;
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    msg.msg_iov = iov;
-    msg.msg_iovlen = iov_len;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
-    io_uring_prep_sendmsg(sqe, fd, &msg, 0);
-
     io_uring_sqe_set_flags(sqe, flags);
     if (registerfiles)
         sqe->flags |= IOSQE_FIXED_FILE;
