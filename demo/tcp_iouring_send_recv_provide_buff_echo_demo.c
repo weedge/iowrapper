@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
     // start event loop
     while (1) {
-        int ret = io_uring_submit_and_wait(&ring, 1);
+        int ret = io_uring_wait_cqe(&ring, 1);
         if (ret < 0) {
             perror("Error io_uring_wait_cqe\n");
             exit(1);
