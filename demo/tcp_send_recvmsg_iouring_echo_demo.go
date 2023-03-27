@@ -24,14 +24,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	l := ln.(*net.TCPListener)
-	lf, _ := l.File()
-	lfd := lf.Fd()
+	tcpln := ln.(*net.TCPListener)
+	cf, _ := tcpln.File()
+	ln.Close()
+
+	lfd := cf.Fd() // 拿到对应的fd
+	println(lfd)
 
 	fmt.Println("Server listening on port 8888...", "listen socket fd", lfd)
 
 	defer func() {
-		err = ln.Close()
+		err = tcpln.Close()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to close listener: %v\n", err)
 		}

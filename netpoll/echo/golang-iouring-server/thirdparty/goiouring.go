@@ -118,7 +118,12 @@ func IOurigGoEchoServer() {
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: %s <host:port> (<mod>) \n", os.Args[0])
 	}
-	lfd, err := Listen(os.Args[1])
+	addr := os.Args[1]
+	if len(strings.Split(addr, ":")) == 1 {
+		addr = ":" + os.Args[1]
+	}
+
+	lfd, err := Listen(addr)
 	if err != nil {
 		log.Fatalf("listen err:%s", err.Error())
 	}
