@@ -196,7 +196,7 @@ func IOurigGoEchoServer() {
 			readBytesLen := cqe.Res
 			ring.SeenCqe(cqe)
 			if readBytesLen <= 0 {
-				log.Printf("[error] read errNO %d", cqe.Res)
+				//log.Printf("[error] read errNO %d", cqe.Res)
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
 				syscall.Close(eventInfo.cfd)
