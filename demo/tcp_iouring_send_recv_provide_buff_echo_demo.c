@@ -1,6 +1,6 @@
 #include "io_op.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s port [mode]\n", argv[0]);
         exit(1);
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     // check if buffer selection is supported
     // https://lore.kernel.org/io-uring/20200228203053.25023-1-axboe@kernel.dk/T/#u
-    struct io_uring_probe *probe;
+    struct io_uring_probe* probe;
     probe = io_uring_get_probe_ring(&ring);
     if (!probe || !io_uring_opcode_supported(probe, IORING_OP_PROVIDE_BUFFERS)) {
         printf("Buffer select not supported, skipping...\n");
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    add_accept(&ring, sockfd, (struct sockaddr *)&client_addr, &client_len, 0);
+    add_accept(&ring, sockfd, (struct sockaddr*)&client_addr, &client_len, 0);
 
     // start event loop
     while (1) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
             perror("Error io_uring_wait_cqe\n");
             exit(1);
         }
-        struct io_uring_cqe *cqe;
+        struct io_uring_cqe* cqe;
         unsigned head;
         unsigned count = 0;
 
@@ -73,7 +73,8 @@ int main(int argc, char *argv[]) {
             memcpy(&conn_i, &cqe->user_data, sizeof(conn_i));
             int type = conn_i.type;
             if (cqe->res == -ENOBUFS) {
-                fprintf(stdout, "bufs in automatic buffer selection empty, this should not happen...\n");
+                fprintf(stdout,
+                        "bufs in automatic buffer selection empty, this should not happen...\n");
                 fflush(stdout);
                 exit(1);
             }
@@ -85,20 +86,23 @@ int main(int argc, char *argv[]) {
                         fprintf(stderr, "connect failed: conn_fd %d \n", sock_conn_fd);
                         break;
                     }
-                    printf("Accepted new connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    printf("Accepted new connection from %s:%d\n", inet_ntoa(client_addr.sin_addr),
+                           ntohs(client_addr.sin_port));
 
-                    add_accept(&ring, sockfd, (struct sockaddr *)&client_addr, &client_len, 0);
-                    // add_recvmsg_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN, IOSQE_BUFFER_SELECT);
-                    add_recv_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN, IOSQE_BUFFER_SELECT);
+                    add_accept(&ring, sockfd, (struct sockaddr*)&client_addr, &client_len, 0);
+                    // add_recvmsg_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN,
+                    // IOSQE_BUFFER_SELECT);
+                    add_recv_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN,
+                                             IOSQE_BUFFER_SELECT);
 
                     break;
                 case READ:
                     int bytes_received = cqe->res;
                     int bid = cqe->flags >> 16;
-                    if (bytes_received == -EFAULT ||
-                        bytes_received == -ENOBUFS || bytes_received == -EMSGSIZE ||
-                        bytes_received <= 0) {
-                        fprintf(stderr, "read failed: conn_fd %d bytes_received %d\n", conn_i.fd, bytes_received);
+                    if (bytes_received == -EFAULT || bytes_received == -ENOBUFS ||
+                        bytes_received == -EMSGSIZE || bytes_received <= 0) {
+                        fprintf(stderr, "read failed: conn_fd %d bytes_received %d\n", conn_i.fd,
+                                bytes_received);
                         // read failed, re-add buff
                         add_provide_buf(&ring, bid, group_id);
                         // no bytes available on socket, client must be disconnected
@@ -106,7 +110,8 @@ int main(int argc, char *argv[]) {
                         close(conn_i.fd);
                         break;
                     }
-                    printf("Received %d bytes from client %s:%d\n", bytes_received, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    printf("Received %d bytes from client %s:%d\n", bytes_received,
+                           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
                     // add_sendmsg_from_group_buff(&ring, conn_i.fd, bid, bytes_received, 0);
                     add_send_from_group_buff(&ring, conn_i.fd, bid, bytes_received, 0);
@@ -117,16 +122,19 @@ int main(int argc, char *argv[]) {
 
                     int bytes_sent = cqe->res;
                     if (bytes_sent <= 0) {
-                        fprintf(stderr, "write failed: conn_fd %d bytes_sent %d\n", conn_i.fd, bytes_sent);
+                        fprintf(stderr, "write failed: conn_fd %d bytes_sent %d\n", conn_i.fd,
+                                bytes_sent);
                         // no bytes available on socket, client must be disconnected
                         shutdown(sockfd, SHUT_RDWR);
                         close(conn_i.fd);
                         break;
                     }
 
-                    printf("Echoed %d bytes to client %s:%d\n", bytes_sent, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    printf("Echoed %d bytes to client %s:%d\n", bytes_sent,
+                           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-                    add_recv_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN, IOSQE_BUFFER_SELECT);
+                    add_recv_from_group_buff(&ring, sock_conn_fd, group_id, MAX_MESSAGE_LEN,
+                                             IOSQE_BUFFER_SELECT);
                     break;
                 case PROV_BUF:
                     if (cqe->res < 0) {

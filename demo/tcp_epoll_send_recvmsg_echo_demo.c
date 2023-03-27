@@ -1,7 +1,6 @@
 #include "io_op.h"
-#include "liburing.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s port\n", argv[0]);
         exit(1);
@@ -49,12 +48,12 @@ int main(int argc, char *argv[]) {
 
             if (events[i].data.fd == sockfd) {
                 // New incoming connection
-                int sock_conn_fd = accept(sockfd, (struct sockaddr *)&client_addr, &client_addrlen);
+                int sock_conn_fd = accept(sockfd, (struct sockaddr*)&client_addr, &client_addrlen);
                 if (sock_conn_fd == -1) {
                     error("error");
                 }
-                printf("Accepted new connection from %s:%d\n",
-                       inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                printf("Accepted new connection from %s:%d\n", inet_ntoa(client_addr.sin_addr),
+                       ntohs(client_addr.sin_port));
                 event.events = EPOLLIN | EPOLLET;
                 event.data.fd = sock_conn_fd;
                 if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock_conn_fd, &event) == -1) {
@@ -87,9 +86,8 @@ int main(int argc, char *argv[]) {
                         close(newsockfd);
                         continue;
                     }
-                    printf("Echoed %d bytes to client %s:%d\n",
-                           bytes_sent, inet_ntoa(client_addr.sin_addr),
-                           ntohs(client_addr.sin_port));
+                    printf("Echoed %d bytes to client %s:%d\n", bytes_sent,
+                           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
                 }
             }
         }

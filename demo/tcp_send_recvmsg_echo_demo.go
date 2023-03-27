@@ -38,12 +38,13 @@ func main() {
 		fmt.Printf("Accepted new connection from %s\n", conn.RemoteAddr())
 
 		// Receive data from the client
-		buffer := make([]byte, MAX_BUFFER_SIZE)
+		//buffer := make([]byte, MAX_BUFFER_SIZE)
+		buffer := [MAX_BUFFER_SIZE]byte{}
 
 		s := conn.(*net.TCPConn)
 		f, err := s.File()
 
-		n, _, _, from, err := syscall.Recvmsg(int(f.Fd()), buffer, []byte{}, 0)
+		n, _, _, from, err := syscall.Recvmsg(int(f.Fd()), buffer[:], []byte{}, 0)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to receive data from client: %v\n", err)
 			conn.Close()
@@ -52,7 +53,7 @@ func main() {
 
 		fmt.Printf("Received %d bytes from client %s: %s\n", n, conn.RemoteAddr(), string(buffer[:n]))
 
-		err = syscall.Sendmsg(int(f.Fd()), buffer, []byte{}, from, 0)
+		err = syscall.Sendmsg(int(f.Fd()), buffer[:], []byte{}, from, 0)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to send data to client: %v\n", err)
 			conn.Close()
@@ -62,12 +63,10 @@ func main() {
 		fmt.Printf("Echoed %d bytes to client %s\n", n, conn.RemoteAddr())
 
 		// Close the connection
-		/*
-			err = conn.Close()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to close connect: %v\n", err)
-			}
-			fmt.Printf("closed conn\n")
-		*/
+		err = conn.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to close connect: %v\n", err)
+		}
+		fmt.Printf("closed connfd %d\n", f.Fd())
 	}
 }

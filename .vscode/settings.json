@@ -13,14 +13,14 @@
     ],
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.includePath": [
-        "${cmd}/iouring/liburing/include"
+        //"${cmd}/iouring/liburing/include"
     ],
     "go.buildFlags": [
         //"-tags=iouringgo"
-        //"-tags=goiouring"
+        "-tags=goiouring"
     ],
     "go.testFlags": [
         //"iouringgo",
-        //"goiouring",
+        "goiouring",
     ],
 }
