@@ -13,10 +13,10 @@ curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
-#connectionsArr=(1 50 150 300 500 1000 2000)
-connectionsArr=(2000)
-#bytesArr=(128 512 1000)
-bytesArr=(1000)
+connectionsArr=(300 500 1000 2000)
+#connectionsArr=(2000)
+bytesArr=(128 512 1000)
+#bytesArr=(1000)
 
 $serverCmd &
 SRV_PID=$!
@@ -24,7 +24,7 @@ SRV_PID=$!
 taskset -cp 0 $SRV_PID
 sleep 3s
 
-runCn=1
+runCn=3
 for bytes in ${bytesArr[*]}; do
   for connections in ${connectionsArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"

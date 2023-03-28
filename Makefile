@@ -5,8 +5,6 @@ echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
 target ?= \
 	c_epoll_echo_server \
 	c_io_uring_echo_server \
-	c_io_uring_echo_server_v1 \
-	c_io_uring_echo_server_v2 \
 	c_io_uring_echo_server_v3 \
 	#golang_iouring_echo_server \
 	#golang_netpoll_echo_server \
