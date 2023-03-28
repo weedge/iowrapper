@@ -32,8 +32,8 @@ static int registerfiles;
 static int* files;
 static int* registered_files;
 
-static int max_connections = 65536;
-static int msg_len = 128;
+static int max_connections = 4092;
+static int msg_len = 2046;
 
 enum {
     ACCEPT,
@@ -133,8 +133,13 @@ int main(int argc, char* argv[]) {
     }
 
     if (!portno || !max_connections) {
-        usage();
-        exit(1);
+        int port = atoi(argv[1]);
+        if (!portno && port > 3000) {
+            portno = port;
+        } else {
+            usage();
+            exit(1);
+        }
     }
 
     if (!msg_len)

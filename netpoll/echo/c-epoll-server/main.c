@@ -10,12 +10,12 @@
 #include <unistd.h>
 
 #define BACKLOG 512
-#define MAX_EVENTS 128
+#define MAX_EVENTS 1024
 #define MAX_MESSAGE_LEN 2048
 
-void error(char *msg);
+void error(char* msg);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("Please give a port number: ./epoll_echo_server [port]\n");
         exit(0);
@@ -35,14 +35,13 @@ int main(int argc, char *argv[]) {
         error("Error creating socket..\n");
     }
 
-    memset((char *)&server_addr, 0, sizeof(server_addr));
+    memset((char*)&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(portno);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     // bind socket and listen for connections
-    if (bind(sock_listen_fd, (struct sockaddr *)&server_addr,
-             sizeof(server_addr)) < 0)
+    if (bind(sock_listen_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
         error("Error binding socket..\n");
 
     if (listen(sock_listen_fd, BACKLOG) < 0) {
@@ -73,8 +72,8 @@ int main(int argc, char *argv[]) {
 
         for (int i = 0; i < new_events; ++i) {
             if (events[i].data.fd == sock_listen_fd) {
-                sock_conn_fd = accept4(sock_listen_fd, (struct sockaddr *)&client_addr,
-                                       &client_len, SOCK_NONBLOCK);
+                sock_conn_fd = accept4(sock_listen_fd, (struct sockaddr*)&client_addr, &client_len,
+                                       SOCK_NONBLOCK);
                 if (sock_conn_fd == -1) {
                     error("Error accepting new connection..\n");
                 }
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
     }
 }
 
-void error(char *msg) {
+void error(char* msg) {
     perror(msg);
     printf("erreur...\n");
     exit(1);
