@@ -140,7 +140,7 @@ cpu MHz : 1996.800 <br>
 4  Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz <br>
 MemTotal: 2005084 kB <br>
 
-### **case1**. golang echo server (bound 1 core `taskset -cp 0 $SRV_PID`) bench
+### **case1**. golang echo server (one cpu vcore `taskset -cp 0 $SRV_PID`) bench
 
 |                    | go-netpoll | go-iouring | go-iouring-sqpoll |
 |--------------------|------------|------------|-------------------|
@@ -156,6 +156,12 @@ MemTotal: 2005084 kB <br>
 | c:500 bytes:1000   | 39191 | 63407 | 77784 |
 | c:1000 bytes:1000  | 42663 | 60978 | 74310 |
 | c:2000 bytes:1000  | 42207 | 58816 | 66598 |
+
+![golang echo server bench](./docs/golang%20echo%20server%20(1%20core)%20rps-chart.png)
+![](./docs/golang_iouring_sqp_echo_server_workload(1c).png)
+![](./docs/golang_netpoll_again_echo_server_workload(1c).png)
+* golang netpoll more workload(cpu), more G:M (init G:M and G per connect);
+* golang io_uring (sqp) less workload(cpu), less G:M (init G:M);
 
 ## reference
 1. **https://unixism.net/loti/**
