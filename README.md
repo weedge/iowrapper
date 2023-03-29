@@ -160,7 +160,7 @@ MemTotal: 2005084 kB <br>
 ![golang echo server bench](./docs/golang%20echo%20server%20(1%20core)%20rps-chart.png)
 ![](./docs/golang_iouring_sqp_echo_server_workload(1c).png)
 ![](./docs/golang_netpoll_again_echo_server_workload(1c).png)
-* golang netpoll more workload(cpu), more G:M (init G:M and G per connect);
+* golang netpoll more workload(cpu), more G:M (init G:M, some M and G per connect);
 * golang io_uring (sqp) less workload(cpu), less G:M (init G:M);
 
 ## reference
