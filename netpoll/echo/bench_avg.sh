@@ -13,10 +13,10 @@ curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
-#connectionsArr=(300 500 1000 2000)
-connectionsArr=(2000)
-#bytesArr=(128 512 1000)
-bytesArr=(1000)
+connectionsArr=(300 500 1000 2000)
+#connectionsArr=(2000)
+bytesArr=(128 512 1000)
+#bytesArr=(1000)
 
 
 ulimit -n 10240

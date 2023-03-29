@@ -110,7 +110,7 @@ func Listen(address string) (listenFD int, err error) {
 		return
 	}
 
-	log.Printf("listen addr %s port %d\n", addr, port)
+	//log.Printf("listen addr %s port %d\n", addr, port)
 	return
 }
 

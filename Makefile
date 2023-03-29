@@ -50,12 +50,12 @@ golang_iouring_echo_server:
 
 golang_iouring_sqp_echo_server:
 	#bench golang_iouring_sqp_echo_server
-	@${echo_bench_avg_shell} 8887 "./build/golang_iouring_echo_server 8887 sqp"\
+	@${echo_bench_avg_shell} 8888 "./build/golang_iouring_echo_server 8888 sqp"\
 		>> ${echo_bench_result_dir}/golang_iouring_sqp_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 golang_netpoll_echo_server:
 	#bench golang_netpoll_echo_server
-	@${echo_bench_avg_shell} 8880 "./build/golang_netpoll_echo_server 8880"\
+	@${echo_bench_avg_shell} 8888 "./build/golang_netpoll_echo_server 8888"\
 		>> ${echo_bench_result_dir}/golang_netpoll_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 c_epoll_echo_server:
