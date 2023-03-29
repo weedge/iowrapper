@@ -8,6 +8,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 pid=$(lsof -itcp:$1 | sed -n -e 2p | awk '{print $2}')
+echo "pid $pid"
 
 if [ $2 = "strace" ]; then
     sudo strace -p $pid

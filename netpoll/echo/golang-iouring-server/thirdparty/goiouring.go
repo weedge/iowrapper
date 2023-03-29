@@ -118,6 +118,11 @@ func IOurigGoEchoServer() {
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: %s <host:port> (<mod>) \n", os.Args[0])
 	}
+
+	//runtime.GOMAXPROCS(1)
+	//runtime.GOMAXPROCS(runtime.NumCPU())
+	//runtime.GOMAXPROCS(runtime.NumCPU() * 2)
+
 	addr := os.Args[1]
 	if len(strings.Split(addr, ":")) == 1 {
 		addr = ":" + os.Args[1]
