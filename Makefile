@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 check_iouring_worker_pool?=./check_iouring_worker_pool.sh
 echo_bench_result_dir?=./netpoll/echo/bench-result
-echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
+echo_bench_avg_shell?=./netpoll/echo/one_core_bench_avg.sh
 target ?= \
 	golang_netpoll_echo_server \
 	golang_iouring_echo_server \
