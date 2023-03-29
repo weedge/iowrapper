@@ -110,7 +110,7 @@ func Listen(address string) (listenFD int, err error) {
 		return
 	}
 
-	log.Printf("listen addr %s port %d", addr, port)
+	log.Printf("listen addr %s port %d\n", addr, port)
 	return
 }
 
@@ -158,7 +158,7 @@ func IOurigGoEchoServer() {
 	ProduceSocketListenAcceptSqe(ring, lfd, 0)
 
 	for {
-		_, err := ring.SubmitAndWait(1)
+		_, err := ring.Submit()
 		if err != nil {
 			log.Printf("[error] ring submit %s", err.Error())
 			return
@@ -177,13 +177,12 @@ func IOurigGoEchoServer() {
 		switch eventInfo.etype {
 		case ETypeAccept:
 			connFd := cqe.Res
-			ring.SeenCqe(cqe)
 			if connFd < 0 {
 				log.Printf("[error] connect failed connFd %d\n", connFd)
 				break
 			}
 
-			//log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr)
+			//log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr.Addr)
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
@@ -194,12 +193,18 @@ func IOurigGoEchoServer() {
 
 		case ETypeRead:
 			readBytesLen := cqe.Res
-			ring.SeenCqe(cqe)
 			if readBytesLen <= 0 {
-				//log.Printf("[error] read errNO %d", cqe.Res)
+				if readBytesLen < 0 || cqe.Res == int32(syscall.ENOBUFS) || cqe.Res == int32(syscall.EBADF) {
+					log.Printf("[error] read errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
+				} else {
+					//log.Printf("[warn] read empty errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
+				}
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
+				// notice: if next connect use closed cfd (TIME_WAIT stat between 2MSL eg:4m), read from closed cfd return EBADF
 				syscall.Close(eventInfo.cfd)
+
+				//ProduceSocketListenAcceptSqe(ring, lfd, 0)
 				break
 			}
 
@@ -210,28 +215,28 @@ func IOurigGoEchoServer() {
 			ProduceSocketConnSendSqe(ring, eventInfo.cfd, int(readBytesLen), 0)
 
 		case ETypeWrite:
-			writeBytesLen := cqe.Res
-			ring.SeenCqe(cqe)
-			if writeBytesLen < 0 {
-				// write failed
-				// connection closed or error
-				log.Printf("[error] write errNO %d", cqe.Res)
-				syscall.Close(eventInfo.cfd)
-				break
-			}
-			if writeBytesLen == 0 {
-				log.Printf("[warn] empty response!\n")
-			}
-
-			//log.Printf("Echoed %d bytes to client %+v\n", writeBytesLen, clientAddr)
+			/*
+				writeBytesLen := cqe.Res
+				if writeBytesLen < 0 {
+					// write failed
+					log.Printf("[error] write errNO %d", cqe.Res)
+					//syscall.Close(eventInfo.cfd)
+					break
+				}
+				if writeBytesLen == 0 {
+					log.Printf("[warn] empty response!\n")
+					break
+				}
+				log.Printf("Echoed %d bytes to client %+v\n", writeBytesLen, clientAddr)
+			*/
 
 			//ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
 			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
 
 		default:
-			ring.SeenCqe(cqe)
 			log.Panicf("unsupport event type %d\n", eventInfo.etype)
 		}
+		ring.SeenCqe(cqe)
 	}
 
 }

@@ -18,11 +18,8 @@ connectionsArr=(300 500 1000 2000)
 bytesArr=(128 512 1000)
 #bytesArr=(1000)
 
-$serverCmd &
-SRV_PID=$!
-#SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
-taskset -cp 0 $SRV_PID
-sleep 3s
+
+ulimit -n 10240
 
 runCn=3
 for bytes in ${bytesArr[*]}; do
@@ -31,11 +28,19 @@ for bytes in ${bytesArr[*]}; do
     RPS_SUM=0
     for i in `seq 1 $runCn`; do
 
+      $serverCmd &
+      SRV_PID=$!
+      #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
+      taskset -cp 0 $SRV_PID
+      sleep 3s
+
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')
       RPS_SUM=$((RPS_SUM + RPS))
       echo "attempt: $i, rps: $RPS "
 
+      #kill and restart echo server to avoid some tw reuse closed cfd case
+      kill $SRV_PID
       sleep 3s
     done
 
@@ -43,6 +48,3 @@ for bytes in ${bytesArr[*]}; do
     echo "average RPS: $RPS_AVG "
   done
 done
-
-kill $SRV_PID
-sleep 3s
