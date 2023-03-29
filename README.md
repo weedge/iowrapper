@@ -127,6 +127,36 @@ sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -
 * [Linux kernel profiling with perf tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
 * more perf tools : https://www.brendangregg.com/linuxperf.html
 
+## bench result
+test VM
+> Distributor ID: Ubuntu <br>
+Description: Ubuntu Lunar Lobster (development branch) <br>
+Release: 23.04 <br>
+Codename: lunar <br>
+Linux ubuntu2 6.2.0-18-generic #18-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 16 00:09:48 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux <br>
+physical id 1 <br>
+processor 4 <br>
+cpu MHz : 1996.800 <br>
+4  Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz <br>
+MemTotal: 2005084 kB <br>
+
+### **case1**. golang echo server (bound 1 core `taskset -cp 0 $SRV_PID`) bench
+
+|                    | go-netpoll | go-iouring | go-iouring-sqpoll |
+|--------------------|------------|------------|-------------------|
+| c:300 bytes:128    | 38630 | 61884 | 78348 |
+| c:500 bytes:128    | 44235 | 65096 | 76976 |
+| c:1000 bytes:128   | 41551 | 62788 | 74774 |
+| c:2000 bytes:128   | 40133 | 64316 | 78213 |
+| c:300 bytes:512    | 42702 | 67029 | 82585 |
+| c:500 bytes:512    | 40298 | 61839 | 73856 |
+| c:1000 bytes:512   | 43908 | 65027 | 74533 |
+| c:2000 bytes:512   | 41182 | 63614 | 71960 |
+| c:300 bytes:1000   | 41143 | 65582 | 74441 |
+| c:500 bytes:1000   | 39191 | 63407 | 77784 |
+| c:1000 bytes:1000  | 42663 | 60978 | 74310 |
+| c:2000 bytes:1000  | 42207 | 58816 | 66598 |
+
 ## reference
 1. **https://unixism.net/loti/**
 2. https://unixism.net/2020/04/io-uring-by-example-article-series/
@@ -134,5 +164,4 @@ sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -
 4. [Diego Didona - **<u>Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring</u>**](https://atlarge-research.com/pdfs/2022-systor-apis.pdf) , [video](https://www.youtube.com/watch?v=5jKKVdJJqKY)
 5. [awesome-iouring](https://github.com/espoal/awesome-iouring)
 6. https://openanolis.cn/sig/high-perf-storage/doc/218455073889779745
-
 

@@ -140,7 +140,7 @@ func IOurigGoEchoServer() {
 			params.Flags |= gouring.IORING_SETUP_SQPOLL
 			params.SqThreadCpu = uint32(1)
 			params.SqThreadIdle = uint32(10000)
-			println("sql mod setup")
+			println("sqp mod setup")
 		}
 	}
 
