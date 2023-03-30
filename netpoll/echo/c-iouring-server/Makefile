@@ -4,7 +4,7 @@ build_dir = ../../../build
 CCFLAGS ?= -Wall -O3 -D_GNU_SOURCE
 DEBUG_CCFLAGS ?= -g -Wall -O0 -D_GNU_SOURCE
 LDFLAGS ?= -luring 
-LIBURING_FLAGS ?= -I $(liburing_dir)/include
+LIBURING_FLAGS ?= -I $(liburing_dir)/src/include
 
 ifeq ($(DEBUG),1)
 CCFLAGS = $(DEBUG_CCFLAGS)
@@ -30,7 +30,7 @@ liburing:
 	+$(MAKE) -C ${liburing_dir}
 
 %: %.c pre
-	$(CC) $(CCFLAGS) $(LDFLAGS) ${LIBURING_FLAGS} -o ${build_dir}/$@ $< ${liburing_dir}/src/liburing.a
+	$(CC) $(CCFLAGS) ${LIBURING_FLAGS} -o ${build_dir}/$@ $< ${liburing_dir}/src/liburing.a
 
 .PHONY: liburing
 

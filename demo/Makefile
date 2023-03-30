@@ -5,7 +5,7 @@ CC ?= cc
 CCFLAGS ?= -Wall -O3 -D_GNU_SOURCE 
 DEBUG_CCFLAGS ?= -Wall -O0 -D_GNU_SOURCE -g
 LDFLAGS ?= -luring 
-LIBURING_FLAGS ?= -I $(liburing_dir)/include
+LIBURING_FLAGS ?= -I $(liburing_dir)/src/include
 
 # Please keep this list sorted alphabetically.
 demo_srcs := \
@@ -25,7 +25,7 @@ io_op.o: io_op.c ${liburing_dir}/src/liburing.a
 	$(CC) ${DEBUG_CCFLAGS} ${LIBURING_FLAGS} -o ${build_dir}/$@ -c $<
 
 %: %.c $(io_op) io_op.h 
-	$(CC) $(DEBUG_CCFLAGS) ${LIBURING_FLAGS} -o ${build_dir}/$@ $< ${build_dir}/$(io_op) $(LDFLAGS)
+	$(CC) $(DEBUG_CCFLAGS) ${LIBURING_FLAGS} -o ${build_dir}/$@ $< ${build_dir}/$(io_op) ${liburing_dir}/src/liburing.a
 
 clean:
 	@rm -f ${build_dir}/${io_op} ${build_dir}/$(all_targets)

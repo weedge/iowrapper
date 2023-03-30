@@ -1,8 +1,20 @@
-CXXFLAGS ?= -Wall -O3 -D_GNU_SOURCE -luring -std=c++20 -fcoroutines
-all_targets = coroutine_io_uring_echo_server
+liburing_dir = ../../../iouring/liburing
 build_dir = ../../../build
 
-.PHONY: liburing io_uring_echo_server
+CXXFLAGS ?= -Wall -O3 -D_GNU_SOURCE -std=c++20 -fcoroutines
+DEBUG_CXXFLAGS ?= -g -Wall -O0 -D_GNU_SOURCE -std=c++20 -fcoroutines
+LDFLAGS ?= luring
+LIBURING_FLAGS ?= -I $(liburing_dir)/src/include
+
+ifeq ($(DEBUG),1)
+CXXFLAGS = $(DEBUG_CXXFLAGS)
+endif
+
+srcs := \
+  	coroutine_io_uring_echo_server.cpp \
+	
+all_targets := $(patsubst %.cpp,%,$(srcs))
+
 
 all: $(all_targets)
 
@@ -15,8 +27,6 @@ build: clean
 liburing:
 	+$(MAKE) -C ../../../iouring/liburing
 
-coroutine_io_uring_echo_server: clean
-	$(CXX) main.cpp -o ${build_dir}/${all_targets}  ${CXXFLAGS}
+%: %.cpp clean liburing
+	$(CXX) $(CXXFLAGS) ${LIBURING_FLAGS} -o ${build_dir}/$@ $< ${liburing_dir}/src/liburing.a
 
-debug: clean
-	$(CXX) main.cpp -o ${build_dir}/${all_targets}  ${CXXFLAGS} -g
