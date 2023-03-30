@@ -16,7 +16,14 @@ if [ $2 = "strace" ]; then
 fi
 
 if [ $2 = "perf" ]; then
-    sudo perf trace -p $pid
+    if [ -z $3 ]; then
+        sudo perf trace -p $pid
+    elif [ $3 = "stat-iouring" ]; then
+        #sudo perf list 'io_uring:*'
+        sudo perf stat -e io_uring:* -p $pid --timeout 10000
+    else
+        sudo perf stat -a -ddd -p $pid --timeout 10000
+    fi
     exit
 fi
 
@@ -38,6 +45,8 @@ watch -n 1 "lsof -itcp:$1 | sed -n -e 2p | awk '{print \$2}' | xargs pstree -pt"
 
 #sh watchPort.sh 8888
 #sh watchPort.sh 8888 strace
+#sh watchPort.sh 8888 perf
+#sh watchPort.sh 8888 perf stat-iouring
 #sh watchPort.sh 8888 bpftrace
 #sh watchPort.sh 8888 bpftrace thread
 #sh watchPort.sh 8888 bpftrace syscalls:sys_enter_io_uring_enter
