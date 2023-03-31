@@ -9,4 +9,7 @@
 
 Tips: prompt in the code comment. (u need domain related knowledge -> domain prompt enginer -> trouble shooting coder -> domain architecture engineer -> openAI Ultraman -> continue konw domain related knowledge -> ...) uring~ :)
 
+## read more
+1. http://locklessinc.com/articles/locks 
+
 ## demo your dream

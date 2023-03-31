@@ -4,3 +4,6 @@
 [submodule "netpoll/echo/rust_echo_bench"]
 	path = netpoll/echo/rust_echo_bench
 	url = https://github.com/haraldh/rust_echo_bench
+[submodule "boost_fiber_uring_proactor"]
+	path = boost_fiber_uring_proactor
+	url = https://github.com/weedge/helio

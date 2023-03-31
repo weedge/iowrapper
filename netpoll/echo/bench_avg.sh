@@ -3,11 +3,12 @@ set -e
 echo $(uname -a)
 
 if [ "$#" -lt 2 ]; then
-    echo "Please give port where echo server is running: $0 [port] [serverCmd]"
+    echo "Please give port where echo server is running: $0 [port] [serverCmd] <option>"
     exit
 fi
 port=$1
 serverCmd=$2
+option=$3
 
 curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
@@ -27,11 +28,14 @@ for bytes in ${bytesArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"
     RPS_SUM=0
     for i in `seq 1 $runCn`; do
-
-      $serverCmd &
+      if [ "$option" == "size" ]; then
+        $serverCmd --size=$bytes &
+      else
+        $serverCmd &
+      fi
       SRV_PID=$!
       #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
-      taskset -cp 0 $SRV_PID
+      [ "$option" == "" ] && taskset -cp 0 $SRV_PID
       sleep 3s
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`

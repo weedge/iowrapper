@@ -1,7 +1,11 @@
 SHELL := /bin/bash
 check_iouring_worker_pool?=./check_iouring_worker_pool.sh
 echo_bench_result_dir?=./netpoll/echo/bench-result
-echo_bench_avg_shell?=./netpoll/echo/one_core_bench_avg.sh
+echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
+
+#boost_fiber_uring_proactor_build_dir?=boost_fiber_uring_proactor/build-opt
+boost_fiber_uring_proactor_build_dir?=${HOME}/project/c++/helio/build-opt
+
 target ?= \
 	golang_netpoll_echo_server \
 	golang_iouring_echo_server \
@@ -45,17 +49,17 @@ bench-echo: pre ${target}
 
 golang_iouring_echo_server:
 	#bench golang_iouring_echo_server
-	@${echo_bench_avg_shell} 8888 "./build/golang_iouring_echo_server 8888"\
+	@${echo_bench_avg_shell} 8881 "./build/golang_iouring_echo_server 8881"\
 		>> ${echo_bench_result_dir}/golang_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 golang_iouring_sqp_echo_server:
 	#bench golang_iouring_sqp_echo_server
-	@${echo_bench_avg_shell} 8888 "./build/golang_iouring_echo_server 8888 sqp"\
+	@${echo_bench_avg_shell} 8881 "./build/golang_iouring_echo_server 8881 sqp"\
 		>> ${echo_bench_result_dir}/golang_iouring_sqp_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 golang_netpoll_echo_server:
 	#bench golang_netpoll_echo_server
-	@${echo_bench_avg_shell} 8888 "./build/golang_netpoll_echo_server 8888"\
+	@${echo_bench_avg_shell} 8881 "./build/golang_netpoll_echo_server 8881"\
 		>> ${echo_bench_result_dir}/golang_netpoll_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 c_epoll_echo_server:
@@ -98,3 +102,15 @@ rust_io_uring_echo_server:
 check_iouring_worker_pool:
 	@${check_iouring_worker_pool}
 
+
+#build-boost_fiber_uring_echo_server:
+#	@cd boost_fiber_uring_proactor
+#	@sudo ./install-dependencies.sh
+#	@bash ./blaze.sh -ninja -release
+#	@cd build-opt && ninja -j4 raw_echo_server
+
+# make bench-echo target=boost_fiber_uring_echo_server
+boost_fiber_uring_echo_server:
+	#bench fiber_io_uring_echo_server
+	@${echo_bench_avg_shell} 8888 "${boost_fiber_uring_proactor_build_dir}/raw_echo_server --logtostderr --threads=4 --port=8888" size \
+		>> ${echo_bench_result_dir}/fiber_io_uring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
