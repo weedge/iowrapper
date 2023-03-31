@@ -140,8 +140,8 @@ cpu MHz : 1996.800 <br>
 4  Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz <br>
 MemTotal: 2005084 kB <br>
 
-### **case1**. golang echo server (one cpu vcore `taskset -cp 0 $SRV_PID`) bench
-
+### **case1**. golang echo server  bench
+one cpu vcore, set affinity cpu 0 `taskset -cp 0 $SRV_PID` (c pthread_setaffinity_np, syscall sched_setaffinity for thread pid)
 |                    | go-netpoll | go-iouring | go-iouring-sqpoll |
 |--------------------|------------|------------|-------------------|
 | c:300 bytes:128    | 38630 | 61884 | 78348 |

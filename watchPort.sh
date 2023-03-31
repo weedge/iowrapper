@@ -40,7 +40,8 @@ if [ $2 = "bpftrace" ]; then
     exit
 fi
 
-watch -n 1 "lsof -itcp:$1 | sed -n -e 2p | awk '{print \$2}' | xargs pstree -pt"
+#watch -n 1 "lsof -itcp:$1 | sed -n -e 2p | awk '{print \$2}' | xargs pstree -pt"
+watch -n 1 "lsof -itcp:$1 | sed -n -e 2p | awk '{print \$2}' | xargs pidstat -t -p"
 
 
 #sh watchPort.sh 8888
