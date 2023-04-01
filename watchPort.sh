@@ -18,6 +18,9 @@ fi
 if [ $2 = "perf" ]; then
     if [ -z $3 ]; then
         sudo perf trace -p $pid
+        sudo perf trace -p $pid
+    elif [ $3 = "top" ]; then
+	sudo perf top -p $pid --call-graph dwarf
     elif [ $3 = "stat-iouring" ]; then
         #sudo perf list 'io_uring:*'
         sudo perf stat -e io_uring:* -p $pid --timeout 10000
@@ -47,6 +50,7 @@ watch -n 1 "lsof -itcp:$1 | sed -n -e 2p | awk '{print \$2}' | xargs pidstat -t 
 #sh watchPort.sh 8888
 #sh watchPort.sh 8888 strace
 #sh watchPort.sh 8888 perf
+#sh watchPort.sh 8888 perf top
 #sh watchPort.sh 8888 perf stat-iouring
 #sh watchPort.sh 8888 bpftrace
 #sh watchPort.sh 8888 bpftrace thread
