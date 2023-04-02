@@ -12,6 +12,7 @@ apt-get install -y gcc g++
 apt-get install -y fio
 cd /tmp
 
+# for man liburing  help doc
 git clone https://github.com/axboe/liburing.git
 cd liburing
 ./configure --cc=gcc --cxx=g++

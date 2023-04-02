@@ -20,7 +20,7 @@ if [ $2 = "perf" ]; then
         sudo perf trace -p $pid
         sudo perf trace -p $pid
     elif [ $3 = "top" ]; then
-	sudo perf top -p $pid --call-graph dwarf
+	    sudo perf top -p $pid --call-graph dwarf
     elif [ $3 = "stat-iouring" ]; then
         #sudo perf list 'io_uring:*'
         sudo perf stat -e io_uring:* -p $pid --timeout 10000

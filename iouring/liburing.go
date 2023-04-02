@@ -9,7 +9,8 @@
 package iouring
 
 /*
-#cgo LDFLAGS: -luring
+#cgo CFLAGS: -I${SRCDIR}/liburing/src/include
+#cgo LDFLAGS: -L${SRCDIR}/liburing/src ${SRCDIR}/liburing/src/liburing.a
 #include <fcntl.h>
 #include <liburing.h>
 #include <stdio.h>

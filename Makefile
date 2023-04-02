@@ -23,7 +23,7 @@ help:
 
 pre:
 	@mkdir -p ${echo_bench_result_dir}
-	@chmod +x ${echo_bench_avg_shell};
+	@chmod +x ${echo_bench_avg_shell}
 
 cargo:
 	@curl https://sh.rustup.rs -sSf | sh

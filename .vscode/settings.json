@@ -17,10 +17,10 @@
     ],
     "go.buildFlags": [
         //"-tags=iouringgo"
-        "-tags=goiouring"
+        //"-tags=goiouring"
     ],
     "go.testFlags": [
         //"iouringgo",
-        "goiouring",
+        //"goiouring",
     ],
 }
