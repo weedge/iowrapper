@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"syscall"
@@ -35,14 +36,20 @@ func (m *MockServerHandler) OnClose(c *poller.Conn, err error) {
 	log.Printf("close: %d err: %s", c.GetFd(), err.Error())
 }
 
+var port = flag.String("port", "8081", "port")
+var msgSize = flag.Int("size", 512, "port")
+
 func main() {
+	flag.Parse()
+
 	go func() {
 		if err := http.ListenAndServe(":6060", nil); err != nil {
 			log.Fatalf("pprof failed: %v", err)
 		}
 	}()
-	server, err := poller.NewServer(":8081", &MockServerHandler{}, &MockDecoder{},
-		poller.WithTimeout(10*time.Second, 3600*time.Second), poller.WithReadBufferLen(128))
+
+	server, err := poller.NewServer(":"+*port, &MockServerHandler{}, &MockDecoder{},
+		poller.WithTimeout(10*time.Second, 3600*time.Second), poller.WithReadBufferLen(*msgSize))
 	if err != nil {
 		log.Println("err")
 		return
