@@ -10,6 +10,7 @@ target ?= \
 	golang_netpoll_echo_server \
 	golang_iouring_echo_server \
 	golang_iouring_sqp_echo_server \
+	#golang_reactor_echo_server \
 	#c_epoll_echo_server \
 	#c_io_uring_echo_server \
 	#c_io_uring_echo_server_v3 \
@@ -41,6 +42,7 @@ build-echo: init
 	@cargo build --manifest-path netpoll/echo/rust-iouring-server/Cargo.toml --release
 	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
 	@go build -v -ldflags="-s -w" -tags goiouring -o ./build/golang_iouring_echo_server netpoll/echo/golang-iouring-server/main.go
+	@go build -v -ldflags="-s -w" -o ./build/golang_reactor_echo_server netpoll/echo/golang-reactor-epoll-server/main.go
 
 build-udp:
 	@cargo build --manifest-path netpoll/udp/iouring-worker-pool/Cargo.toml --release
@@ -49,17 +51,17 @@ bench-echo: pre ${target}
 
 golang_iouring_echo_server:
 	#bench golang_iouring_echo_server
-	@${echo_bench_avg_shell} 8881 "./build/golang_iouring_echo_server 8881"\
+	@${echo_bench_avg_shell} 8888 "./build/golang_iouring_echo_server 8888"\
 		>> ${echo_bench_result_dir}/golang_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 golang_iouring_sqp_echo_server:
 	#bench golang_iouring_sqp_echo_server
-	@${echo_bench_avg_shell} 8881 "./build/golang_iouring_echo_server 8881 sqp"\
+	@${echo_bench_avg_shell} 8888 "./build/golang_iouring_echo_server 8888 sqp"\
 		>> ${echo_bench_result_dir}/golang_iouring_sqp_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 golang_netpoll_echo_server:
 	#bench golang_netpoll_echo_server
-	@${echo_bench_avg_shell} 8881 "./build/golang_netpoll_echo_server 8881"\
+	@${echo_bench_avg_shell} 8888 "./build/golang_netpoll_echo_server 8888"\
 		>> ${echo_bench_result_dir}/golang_netpoll_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 c_epoll_echo_server:
@@ -114,3 +116,15 @@ boost_fiber_uring_echo_server:
 	#bench fiber_io_uring_echo_server
 	@${echo_bench_avg_shell} 8888 "${boost_fiber_uring_proactor_build_dir}/raw_echo_server --logtostderr --threads=4 --port=8888" size \
 		>> ${echo_bench_result_dir}/fiber_io_uring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
+
+# make bench-echo target=golang_reactor_echo_server
+golang_reactor_echo_server:
+	#bench golang_reactor_echo_server
+	@${echo_bench_avg_shell} 8888 "./build/golang_reactor_echo_server_v1 --port 8888" size \
+		>> ${echo_bench_result_dir}/golang_reactor_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
+
+# make bench-echo target=golang_netpoll_more_echo_server
+golang_netpoll_more_echo_server:
+	#bench golang_netpoll_more_echo_server
+	@${echo_bench_avg_shell} 8888 "./build/golang_netpoll_echo_server 8888" size \
+		>> ${echo_bench_result_dir}/golang_netpoll_more_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
