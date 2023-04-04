@@ -9,6 +9,7 @@ LIBURING_FLAGS ?= -I $(liburing_dir)/src/include
 
 # Please keep this list sorted alphabetically.
 demo_srcs := \
+	bench.c \
 	tcp_epoll_send_recvmsg_iouring_echo_demo.c \
 	tcp_iouring_send_recvmsg_echo_demo.c \
 	tcp_iouring_send_recv_provide_buff_echo_demo.c \
