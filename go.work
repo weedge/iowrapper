@@ -5,3 +5,5 @@ use (
 	./netpoll/echo/golang-iouring-server
 	./netpoll/echo/golang-reactor-epoll-server
 )
+
+replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230404130518-f2168ca662d4

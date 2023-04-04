@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"syscall"
 	"time"
 
@@ -37,7 +39,7 @@ func (m *MockServerHandler) OnClose(c *poller.Conn, err error) {
 }
 
 var port = flag.String("port", "8081", "port")
-var msgSize = flag.Int("size", 512, "port")
+var msgSize = flag.Int("size", 512, "size")
 
 func main() {
 	flag.Parse()
@@ -55,5 +57,12 @@ func main() {
 		return
 	}
 
-	server.Run()
+	go server.Run()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("server stop")
+	server.Stop()
 }
