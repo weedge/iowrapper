@@ -836,6 +836,8 @@ github.com/ugorji/go/codec v1.2.9/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZg
 github.com/urfave/cli/v2 v2.11.0/go.mod h1:f8iq5LtQ/bLxafbdBSLPPNsgaW0l/2fYYEHhAyPlwvo=
 github.com/weedge/lib v0.0.0-20230407031957-c14158fc1f83 h1:QHxh76T7mvgvNSg0CUBn8hijW6ww2rwdkt0LIZxkBkY=
 github.com/weedge/lib v0.0.0-20230407031957-c14158fc1f83/go.mod h1:ITVEj3f7q7NcZEt62eTaArpM5a/xuwCSGsAGf3Wql54=
+github.com/weedge/lib v0.0.0-20230407051533-b5df928d13b8 h1:qStBnsNl3N1Kh+ca3+bFG8JEeKqRxNavrDastO7jjIA=
+github.com/weedge/lib v0.0.0-20230407051533-b5df928d13b8/go.mod h1:CMJAEUSculA+sNAUx7Xn7VjlfC5WiiN2i3Zec6hrxp0=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.1/go.mod h1:RaEWvsqvNKKvBPvcKeFjrG2cJqOkHTiyTpzz23ni57g=
 github.com/xdg-go/scram v1.1.2/go.mod h1:RT/sEzTbU5y00aCK8UOx6R7YryM0iF1N2MOmC3kKLN4=
