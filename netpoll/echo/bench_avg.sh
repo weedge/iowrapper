@@ -9,6 +9,8 @@ fi
 port=$1
 serverCmd=$2
 option=$3
+args=$#
+lastOpt=${!args}
 
 curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
@@ -35,7 +37,7 @@ for bytes in ${bytesArr[*]}; do
       fi
       SRV_PID=$!
       #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
-      [ "$option" == "" ] && taskset -cp 0 $SRV_PID
+      [ "$lastOpt" == "c1" ] && taskset -cp 0 $SRV_PID
       sleep 3s
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`

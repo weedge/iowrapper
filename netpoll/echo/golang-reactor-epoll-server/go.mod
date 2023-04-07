@@ -2,7 +2,7 @@ module iowrapper/netpoll/echo/golang-reactor-epoll-server
 
 go 1.19
 
-require github.com/weedge/lib v0.0.0-20230404160706-f861a1506231
+require github.com/weedge/lib v0.0.0-20230407031957-c14158fc1f83
 
 require (
 	github.com/bytedance/sonic v1.8.0 // indirect
@@ -40,5 +40,3 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-//replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230404130518-f2168ca662d4

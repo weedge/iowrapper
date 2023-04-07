@@ -42,6 +42,8 @@ extern int io_uring_register(int fd, unsigned int opcode, void *arg,
 ```shell
 # see linux os kernel support uring kernel symbols
 cat /proc/kallsyms | grep uring
+# see syscall table idx no
+ausyscall --dump
 #sudo bpftrace -l | grep io_uring
 #sudo perf list 'io_uring:*'
 #sudo perf stat -e io_uring:io_uring_submit_sqe -- timeout 1 {process}
