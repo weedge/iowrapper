@@ -3,7 +3,8 @@
         "*.rs": "rust",
         "coroutine": "cpp",
         "liburing.h": "c",
-        "io_op.h": "c"
+        "io_op.h": "c",
+        "errno-base.h": "c"
     },
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4 ,TabWidth: 4, ColumnLimit: 0}",
     "C_Cpp.formatting": "default",

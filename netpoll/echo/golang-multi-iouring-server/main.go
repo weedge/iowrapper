@@ -1,12 +1,11 @@
-//go:build goiouring
-// +build goiouring
-
-package thirdparty
+package main
 
 import (
 	"errors"
 	"log"
 	"os"
+	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -114,7 +113,7 @@ func Listen(address string) (listenFD int, err error) {
 	return
 }
 
-func IOurigGoEchoServer() {
+func listen() (lfd int) {
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: %s <host:port> (<mod>) \n", os.Args[0])
 	}
@@ -133,6 +132,10 @@ func IOurigGoEchoServer() {
 		log.Fatalf("listen err:%s", err.Error())
 	}
 
+	return
+}
+
+func initIouring(id int) (ring *gouring.IoUring, err error) {
 	params := &gouring.IoUringParams{}
 	if len(os.Args) >= 3 {
 		switch os.Args[2] {
@@ -144,17 +147,19 @@ func IOurigGoEchoServer() {
 		}
 	}
 
-	ring, err := gouring.NewWithParams(uint32(Entries), params)
+	ring, err = gouring.NewWithParams(uint32(Entries), params)
 	if err != nil {
-		log.Fatalf("io_uring_init err:%s", err.Error())
+		log.Fatalf("id %d io_uring_init err:%s ring %v", id, err.Error(), ring)
 	}
 
 	if params.Features&gouring.IORING_FEAT_FAST_POLL == 0 {
 		log.Fatalf("IORING_FEAT_FAST_POLL not available in the kernel, quiting...")
 	}
 
-	defer ring.Close()
+	return
+}
 
+func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 	buffs = InitBuffs()
 
 	//todo: provide buffer or fixed buffer for kernel space; like buffer pool for user space
@@ -163,6 +168,12 @@ func IOurigGoEchoServer() {
 	ProduceSocketListenAcceptSqe(ring, lfd, 0)
 
 	for {
+		_, err := ring.Submit()
+		if err != nil {
+			log.Printf("[error] ring submit %s", err.Error())
+			return
+		}
+
 		var cqe *gouring.IoUringCqe
 		err = ring.WaitCqe(&cqe)
 		if err != nil {
@@ -181,7 +192,7 @@ func IOurigGoEchoServer() {
 				break
 			}
 
-			log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr.Addr)
+			log.Printf("id %d Accepted new connection %d  from %+v\n", id, connFd, clientAddr.Addr)
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
@@ -194,9 +205,9 @@ func IOurigGoEchoServer() {
 			readBytesLen := cqe.Res
 			if readBytesLen <= 0 {
 				if readBytesLen < 0 || cqe.Res == int32(syscall.ENOBUFS) || cqe.Res == int32(syscall.EBADF) {
-					log.Printf("[error] read errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
+					log.Printf("[error] id %d read errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
 				} else {
-					log.Printf("[warn] read empty errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
+					log.Printf("[warn] id %d read empty errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
 				}
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
@@ -233,7 +244,7 @@ func IOurigGoEchoServer() {
 			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
 
 		default:
-			log.Panicf("unsupport event type %d\n", eventInfo.etype)
+			log.Printf("[error] unsupport event type %d\n", eventInfo.etype)
 		}
 		ring.SeenCqe(cqe)
 	}
@@ -250,12 +261,6 @@ func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
 		etype: ETypeAccept,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
-
 }
 
 func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
@@ -271,11 +276,6 @@ func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
 		etype: ETypeRead,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
 
 }
 
@@ -291,11 +291,6 @@ func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags
 		etype: ETypeWrite,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
 
 }
 
@@ -363,4 +358,37 @@ func InitFixedBuffer() {
 }
 func AddFixedBuffer() {
 
+}
+
+func main() {
+	//n := runtime.NumCPU() * 2
+	n := runtime.NumCPU()
+	//n := 1
+	println("goroutine num", n)
+
+	lfd := listen()
+
+	rings := []*gouring.IoUring{}
+	for i := 0; i < n; i++ {
+		ring, err := initIouring(i)
+		if err != nil {
+			return
+		}
+		rings = append(rings, ring)
+	}
+
+	for i := 0; i < n; i++ {
+		go func(i int) {
+			IOurigGoEchoServer(i, lfd, rings[i])
+		}(i)
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("close server")
+	for i := 0; i < n; i++ {
+		rings[i].Close()
+	}
 }

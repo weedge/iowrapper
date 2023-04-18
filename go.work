@@ -1,9 +1,11 @@
-go 1.19
+go 1.20
 
 use (
-	./iouring
 	./netpoll/echo/golang-iouring-server
+	./netpoll/echo/golang-multi-iouring-server
 	./netpoll/echo/golang-reactor-epoll-server
 )
 
 //replace github.com/weedge/lib => ../lib
+
+//replace github.com/ii64/gouring => ../gouring

@@ -43,6 +43,7 @@ build-echo: init
 	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
 	@go build -v -ldflags="-s -w" -tags goiouring -o ./build/golang_iouring_echo_server netpoll/echo/golang-iouring-server/main.go
 	@go build -v -ldflags="-s -w" -o ./build/golang_reactor_echo_server netpoll/echo/golang-reactor-epoll-server/main.go
+	@go build -v -ldflags="-s -w" -o ./build/golang_multi_iouring_echo_server netpoll/echo/golang-multi-iouring-server/main.go
 
 build-udp:
 	@cargo build --manifest-path netpoll/udp/iouring-worker-pool/Cargo.toml --release
@@ -134,3 +135,9 @@ golang_netpoll_more_echo_server:
 	#bench golang_netpoll_more_echo_server
 	@${echo_bench_avg_shell} 8888 "./build/golang_netpoll_echo_server 8888" size \
 		>> ${echo_bench_result_dir}/golang_netpoll_more_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
+
+# make bench-echo target=golang_multi_iouring_echo_server
+golang_multi_iouring_echo_server:
+	#bench golang_multi_iouring_echo_server
+	@${echo_bench_avg_shell} 8888 "./build/golang_multi_iouring_echo_server 8888" size \
+		>> ${echo_bench_result_dir}/golang_multi_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1

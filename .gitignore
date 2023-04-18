@@ -34,3 +34,6 @@ go.work.sum
 # tmp
 3rd
 test
+
+# ctag
+tags
