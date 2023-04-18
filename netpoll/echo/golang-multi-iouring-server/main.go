@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -113,16 +114,11 @@ func Listen(address string) (listenFD int, err error) {
 	return
 }
 
-func listen() (lfd int) {
-	if len(os.Args) < 2 {
-		log.Fatalf("Usage: %s <host:port> (<mod>) \n", os.Args[0])
-	}
-
+func listen(addr string) (lfd int) {
 	//runtime.GOMAXPROCS(1)
 	//runtime.GOMAXPROCS(runtime.NumCPU())
 	//runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-	addr := os.Args[1]
 	if len(strings.Split(addr, ":")) == 1 {
 		addr = ":" + os.Args[1]
 	}
@@ -360,13 +356,18 @@ func AddFixedBuffer() {
 
 }
 
-func main() {
-	//n := runtime.NumCPU() * 2
-	n := runtime.NumCPU()
-	//n := 1
-	println("goroutine num", n)
+var ringCn = flag.Int("ringCn", 0, "ring cn")
+var port = flag.String("port", "8888", "port")
 
-	lfd := listen()
+func main() {
+	flag.Parse()
+	n := runtime.NumCPU()
+	if *ringCn > 0 {
+		n = *ringCn
+	}
+	println("ring cn", n)
+
+	lfd := listen(":" + *port)
 
 	rings := []*gouring.IoUring{}
 	for i := 0; i < n; i++ {
