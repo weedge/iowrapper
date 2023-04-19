@@ -141,3 +141,9 @@ golang_multi_iouring_echo_server:
 	#bench golang_multi_iouring_echo_server
 	@${echo_bench_avg_shell} 8888 "./build/golang_multi_iouring_echo_server -port 8888" size \
 		>> ${echo_bench_result_dir}/golang_multi_iouring_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
+
+# make bench-echo target=golang_multi_iouring_sqp_echo_server
+golang_multi_iouring_sqp_echo_server:
+	#bench golang_multi_iouring_sqp_echo_server
+	@${echo_bench_avg_shell} 8888 "./build/golang_multi_iouring_echo_server -port 8888 -mode sqp" size \
+		>> ${echo_bench_result_dir}/golang_multi_iouring_sqp_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
