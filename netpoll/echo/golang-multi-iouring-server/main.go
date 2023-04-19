@@ -133,14 +133,12 @@ func listen(addr string) (lfd int) {
 
 func initIouring(id int) (ring *gouring.IoUring, err error) {
 	params := &gouring.IoUringParams{}
-	if len(os.Args) >= 3 {
-		switch os.Args[2] {
-		case "sqp":
-			params.Flags |= gouring.IORING_SETUP_SQPOLL
-			params.SqThreadCpu = uint32(1)
-			params.SqThreadIdle = uint32(10000)
-			println("sqp mod setup")
-		}
+	switch *mode {
+	case "sqp":
+		params.Flags |= gouring.IORING_SETUP_SQPOLL | gouring.IORING_SETUP_SQ_AFF
+		params.SqThreadCpu = uint32(id % runtime.NumCPU())
+		params.SqThreadIdle = uint32(10000)
+		println("id", id, "sqp mod setup")
 	}
 
 	ring, err = gouring.NewWithParams(uint32(Entries), params)
@@ -358,6 +356,7 @@ func AddFixedBuffer() {
 
 var ringCn = flag.Int("ringCn", 0, "ring cn")
 var port = flag.String("port", "8888", "port")
+var mode = flag.String("mode", "", "sqp")
 
 func main() {
 	flag.Parse()
