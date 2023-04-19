@@ -119,6 +119,7 @@ Bench Tips:
     * vmstat check io bi,bo, swap;
     * iostat check device r/w tps, iowait;
 ```shell
+sudo apt install moreutilscis
 sudo apt install dstat
 sudo apt install sysstat
 sudo apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r`
@@ -172,4 +173,5 @@ one cpu vcore, set affinity cpu 0 `taskset -cp 0 $SRV_PID` (c pthread_setaffinit
 4. [Diego Didona - **<u>Understanding Modern Storage APIs: A systematic study of libaio, SPDK, and io_uring</u>**](https://atlarge-research.com/pdfs/2022-systor-apis.pdf) , [video](https://www.youtube.com/watch?v=5jKKVdJJqKY)
 5. [awesome-iouring](https://github.com/espoal/awesome-iouring)
 6. https://openanolis.cn/sig/high-perf-storage/doc/218455073889779745
+7. **[<u>io_uring-and-networking-in-2023</u>](https://github.com/axboe/liburing/wiki/io_uring-and-networking-in-2023)**
 

@@ -13,15 +13,15 @@ curDate=`date +"%Y-%m-%d-%H:%M:%S"`
 curDir=$(cd `dirname $0`; pwd)
 #cd $curDir/rust_echo_bench
 
-connectionsArr=(300 500 1000 2000)
-#connectionsArr=(2000)
-bytesArr=(128 512 1000)
-#bytesArr=(1000)
+#connectionsArr=(300 500 1000 2000)
+connectionsArr=(1000)
+#bytesArr=(128 512 1000)
+bytesArr=(128)
 
 
 ulimit -n 10240
 
-runCn=3
+runCn=1
 for bytes in ${bytesArr[*]}; do
   for connections in ${connectionsArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"
@@ -31,8 +31,9 @@ for bytes in ${bytesArr[*]}; do
       $serverCmd &
       SRV_PID=$!
       #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
-      taskset -cp 0 $SRV_PID
+      #taskset -cp 0 $SRV_PID
       sleep 3s
+      sudo strace -c -tt -p $SRV_PID &
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')

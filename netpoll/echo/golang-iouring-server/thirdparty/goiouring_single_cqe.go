@@ -29,6 +29,7 @@ const (
 	ETypeRead
 	ETypeWrite
 	ETypeProvidBuff
+	ETypeClose
 )
 
 const (
@@ -37,7 +38,7 @@ const (
 )
 
 const (
-	Entries = 10240
+	Entries = 2048
 )
 
 var (
@@ -163,10 +164,18 @@ func IOurigGoEchoServer() {
 	ProduceSocketListenAcceptSqe(ring, lfd, 0)
 
 	for {
+		_, err := ring.Submit()
+		if err != nil {
+			log.Printf("[error] ring submit %s", err.Error())
+			return
+		}
+
 		var cqe *gouring.IoUringCqe
 		err = ring.WaitCqe(&cqe)
 		if err != nil {
-			log.Printf("[error] ring.WaitCqe %s", err.Error())
+			if err != syscall.EINTR {
+				log.Printf("[error] ring.WaitCqe %s", err.Error())
+			}
 			continue
 		}
 
@@ -181,7 +190,7 @@ func IOurigGoEchoServer() {
 				break
 			}
 
-			log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr.Addr)
+			//log.Printf("Accepted new connection %d from %+v\n", connFd, clientAddr.Addr)
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
@@ -196,12 +205,15 @@ func IOurigGoEchoServer() {
 				if readBytesLen < 0 || cqe.Res == int32(syscall.ENOBUFS) || cqe.Res == int32(syscall.EBADF) {
 					log.Printf("[error] read errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
 				} else {
-					log.Printf("[warn] read empty errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
+					//log.Printf("[warn] read empty errNO %d connectFd %d", cqe.Res, eventInfo.cfd)
 				}
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
 				// notice: if next connect use closed cfd (TIME_WAIT stat between 2MSL eg:4m), read from closed cfd return EBADF
-				syscall.Close(eventInfo.cfd)
+				if cqe.Res != int32(syscall.EBADF) {
+					//syscall.Close(eventInfo.cfd)
+					ProduceSocketConnCloseSqe(ring, eventInfo.cfd)
+				}
 
 				//ProduceSocketListenAcceptSqe(ring, lfd, 0)
 				break
@@ -231,6 +243,8 @@ func IOurigGoEchoServer() {
 
 			//ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
 			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
+		case ETypeClose:
+			//log.Printf("close cqeRes %d connectFD %d \n", cqe.Res, eventInfo.cfd)
 
 		default:
 			log.Panicf("unsupport event type %d\n", eventInfo.etype)
@@ -250,12 +264,6 @@ func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
 		etype: ETypeAccept,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
-
 }
 
 func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
@@ -271,12 +279,6 @@ func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
 		etype: ETypeRead,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
-
 }
 
 func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
@@ -291,12 +293,6 @@ func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags
 		etype: ETypeWrite,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-	_, err := ring.Submit()
-	if err != nil {
-		log.Printf("[error] ring submit %s", err.Error())
-		return
-	}
-
 }
 
 func ProduceSocketConnRecvMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, flags uint8) {
@@ -344,6 +340,16 @@ func ProduceSocketConnSendMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.Ra
 		etype: ETypeWrite,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+}
+func ProduceSocketConnCloseSqe(ring *gouring.IoUring, cfd int) {
+	sqe := ring.GetSqe()
+	gouring.PrepClose(sqe, cfd)
+
+	connInfo := EventInfo{
+		cfd:   cfd,
+		etype: ETypeClose,
+	}
+	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
 }
 
 func ProduceSocketConnRecvMsgSqeByBuff(ring *gouring.IoUring, cfd int, guid uint16, msgSize int, flags uint8) {

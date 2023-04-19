@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -29,6 +30,7 @@ const (
 	ETypeRead
 	ETypeWrite
 	ETypeProvidBuff
+	ETypeClose
 )
 
 const (
@@ -37,7 +39,7 @@ const (
 )
 
 const (
-	Entries = 10240
+	Entries = 2048
 )
 
 var (
@@ -137,7 +139,7 @@ func initIouring(id int) (ring *gouring.IoUring, err error) {
 	case "sqp":
 		params.Flags |= gouring.IORING_SETUP_SQPOLL | gouring.IORING_SETUP_SQ_AFF
 		params.SqThreadCpu = uint32(id % runtime.NumCPU())
-		params.SqThreadIdle = uint32(10000)
+		params.SqThreadIdle = uint32(10_000) // 10s
 		println("id", id, "sqp mod setup")
 	}
 
@@ -171,7 +173,9 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 		var cqe *gouring.IoUringCqe
 		err = ring.WaitCqe(&cqe)
 		if err != nil {
-			log.Printf("[error] ring.WaitCqe %s", err.Error())
+			if err != syscall.EINTR {
+				log.Printf("[error] ring.WaitCqe %s", err.Error())
+			}
 			continue
 		}
 
@@ -186,7 +190,7 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 				break
 			}
 
-			log.Printf("id %d Accepted new connection %d  from %+v\n", id, connFd, clientAddr.Addr)
+			//log.Printf("id %d Accepted new connection %d  from %+v\n", id, connFd, clientAddr.Addr)
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
@@ -201,12 +205,15 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 				if readBytesLen < 0 || cqe.Res == int32(syscall.ENOBUFS) || cqe.Res == int32(syscall.EBADF) {
 					log.Printf("[error] id %d read errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
 				} else {
-					log.Printf("[warn] id %d read empty errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
+					//log.Printf("[warn] id %d read empty errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
 				}
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
 				// notice: if next connect use closed cfd (TIME_WAIT stat between 2MSL eg:4m), read from closed cfd return EBADF
-				syscall.Close(eventInfo.cfd)
+				if cqe.Res != int32(syscall.EBADF) {
+					//syscall.Close(eventInfo.cfd)
+					ProduceSocketConnCloseSqe(ring, eventInfo.cfd)
+				}
 
 				//ProduceSocketListenAcceptSqe(ring, lfd, 0)
 				break
@@ -236,6 +243,9 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 
 			//ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
 			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
+		case ETypeClose:
+			counter[id]++
+			//log.Printf("id %d close cqeRes %d connectFD %d \n", id, cqe.Res, eventInfo.cfd)
 
 		default:
 			log.Printf("[error] unsupport event type %d\n", eventInfo.etype)
@@ -270,7 +280,6 @@ func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
 		etype: ETypeRead,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-
 }
 
 func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
@@ -285,7 +294,17 @@ func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags
 		etype: ETypeWrite,
 	}
 	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
+}
 
+func ProduceSocketConnCloseSqe(ring *gouring.IoUring, cfd int) {
+	sqe := ring.GetSqe()
+	gouring.PrepClose(sqe, cfd)
+
+	connInfo := EventInfo{
+		cfd:   cfd,
+		etype: ETypeClose,
+	}
+	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
 }
 
 func ProduceSocketConnRecvMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, flags uint8) {
@@ -358,13 +377,23 @@ var ringCn = flag.Int("ringCn", 0, "ring cn")
 var port = flag.String("port", "8888", "port")
 var mode = flag.String("mode", "", "sqp")
 
+var counter []int
+
 func main() {
 	flag.Parse()
+
+	go func() {
+		if err := http.ListenAndServe(":6060", nil); err != nil {
+			log.Fatalf("pprof failed: %v", err)
+		}
+	}()
+
 	n := runtime.NumCPU()
 	if *ringCn > 0 {
 		n = *ringCn
 	}
 	println("ring cn", n)
+	counter = make([]int, n)
 
 	lfd := listen(":" + *port)
 
@@ -387,8 +416,11 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("close server")
+	totalCn := 0
 	for i := 0; i < n; i++ {
 		rings[i].Close()
+		log.Println("close iouring", i, "close connect count", counter[i])
+		totalCn += counter[i]
 	}
+	log.Println("close total connect count", totalCn)
 }

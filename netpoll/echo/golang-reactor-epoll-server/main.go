@@ -31,10 +31,6 @@ func (m *MockServerHandler) OnClose(c *poller.Conn, err error) {
 
 var port = flag.String("port", "8081", "port")
 var msgSize = flag.Int("size", 512, "size")
-var ioMode = flag.String("ioMode", "", "ioMode")
-var mapIoMode = map[string]poller.IOMode{
-	"iouring": poller.IOModeUring,
-}
 
 func main() {
 	flag.Parse()
@@ -46,7 +42,7 @@ func main() {
 		}
 	}()
 
-	server, err := poller.NewServer(":"+*port, &MockServerHandler{}, poller.WithIoMode(mapIoMode[*ioMode]),
+	server, err := poller.NewServer(":"+*port, &MockServerHandler{},
 		poller.WithTimeout(10*time.Second, 3600*time.Second), poller.WithReadBufferLen(*msgSize))
 	if err != nil {
 		log.Info("err ", err.Error())
