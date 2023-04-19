@@ -36,6 +36,7 @@ for bytes in ${bytesArr[*]}; do
         $serverCmd &
       fi
       SRV_PID=$!
+      echo "pid $SRV_PID"
       #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
       [ "$lastOpt" == "c1" ] && taskset -cp 0 $SRV_PID
       sleep 3s
@@ -48,7 +49,7 @@ for bytes in ${bytesArr[*]}; do
       echo "attempt: $i, rps: $RPS "
 
       #kill and restart echo server to avoid some tw reuse closed cfd case
-      kill $SRV_PID
+      ps -ef | grep $SRV_PID | grep -v grep && kill $SRV_PID
       sleep 3s
     done
 

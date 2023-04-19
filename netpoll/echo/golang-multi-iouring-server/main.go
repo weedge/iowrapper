@@ -156,12 +156,14 @@ func initIouring(id int) (ring *gouring.IoUring, err error) {
 }
 
 func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
+	//runtime.LockOSThread()
+
 	buffs = InitBuffs()
 
 	//todo: provide buffer or fixed buffer for kernel space; like buffer pool for user space
 
 	// trigger start: accept connect
-	ProduceSocketListenAcceptSqe(ring, lfd, 0)
+	ProduceSocketListenAcceptSqe(id, ring, lfd, 0)
 
 	for {
 		_, err := ring.Submit()
@@ -179,7 +181,15 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 			continue
 		}
 
-		eventInfo := (*EventInfo)(cqe.UserData.GetUnsafe())
+		eventInfo, ok := arrMapEvent[id][cqe.UserData]
+		if !ok {
+			log.Printf("[error] id %d cqe %+v eventInfo empty", id, cqe)
+			return
+		}
+		//https://github.com/golang/go/issues/20135
+		delete(arrMapEvent[id], cqe.UserData)
+
+		//eventInfo := (*EventInfo)(cqe.UserData.GetUnsafe())
 		//log.Printf("eventInfo: %+v res:%+v", eventInfo, cqe.Res)
 
 		switch eventInfo.etype {
@@ -194,10 +204,10 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 
 			// new connected client; read data from socket and re-add accept to
 			// monitor for new connections
-			ProduceSocketListenAcceptSqe(ring, lfd, 0)
+			ProduceSocketListenAcceptSqe(id, ring, lfd, 0)
 			// IOSQE_BUFFER_SELECT: select buffer for read with IORING_OP_PROVIDE_BUFFERS command
 			//ProduceSocketConnRecvMsgSqe(ring, int(connFd),gouring.IOSQE_BUFFER_SELECT)
-			ProduceSocketConnRecvSqe(ring, int(connFd), 0)
+			ProduceSocketConnRecvSqe(id, ring, int(connFd), 0)
 
 		case ETypeRead:
 			readBytesLen := cqe.Res
@@ -212,7 +222,7 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 				// notice: if next connect use closed cfd (TIME_WAIT stat between 2MSL eg:4m), read from closed cfd return EBADF
 				if cqe.Res != int32(syscall.EBADF) {
 					//syscall.Close(eventInfo.cfd)
-					ProduceSocketConnCloseSqe(ring, eventInfo.cfd)
+					ProduceSocketConnCloseSqe(id, ring, eventInfo.cfd)
 				}
 
 				//ProduceSocketListenAcceptSqe(ring, lfd, 0)
@@ -223,7 +233,7 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 
 			// bytes have been read into connected fd bufs, now add write to socket sqe
 			//ProduceSocketConnSendMsgSqe(ring, eventInfo.cfd, &clientAddr, int(readBytesLen), 0)
-			ProduceSocketConnSendSqe(ring, eventInfo.cfd, int(readBytesLen), 0)
+			ProduceSocketConnSendSqe(id, ring, eventInfo.cfd, int(readBytesLen), 0)
 
 		case ETypeWrite:
 			/*
@@ -242,13 +252,13 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 			*/
 
 			//ProduceSocketConnRecvMsgSqe(ring, eventInfo.cfd, &clientAddr, 0)
-			ProduceSocketConnRecvSqe(ring, eventInfo.cfd, 0)
+			ProduceSocketConnRecvSqe(id, ring, eventInfo.cfd, 0)
 		case ETypeClose:
 			counter[id]++
 			//log.Printf("id %d close cqeRes %d connectFD %d \n", id, cqe.Res, eventInfo.cfd)
 
 		default:
-			log.Printf("[error] unsupport event type %d event:%+v\n", eventInfo.etype, eventInfo)
+			log.Panicf("[error] id %d unsupport event type %d event:%+v\n", id, eventInfo.etype, eventInfo)
 		}
 		ring.SeenCqe(cqe)
 	}
@@ -263,7 +273,7 @@ When this happens,  the  application must call io_uring_enter(2) to wake the ker
 If I/O is kept busy, the kernel thread will never sleep.
 */
 
-func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
+func ProduceSocketListenAcceptSqe(id int, ring *gouring.IoUring, lfd int, flags uint8) {
 	sqe := ring.GetSqe()
 	gouring.PrepAccept(sqe, lfd, &clientAddr, (*uintptr)(unsafe.Pointer(&clientAddrLen)), 0)
 	sqe.Flags = flags
@@ -272,10 +282,12 @@ func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
 		lfd:   lfd,
 		etype: ETypeAccept,
 	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	//sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	sqe.UserData = gouring.UserData(uintptr(unsafe.Pointer(connInfo)))
+	arrMapEvent[id][sqe.UserData] = connInfo
 }
 
-func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
+func ProduceSocketConnRecvSqe(id int, ring *gouring.IoUring, cfd int, flags uint8) {
 	buff := buffs[cfd]
 
 	sqe := ring.GetSqe()
@@ -283,88 +295,42 @@ func ProduceSocketConnRecvSqe(ring *gouring.IoUring, cfd int, flags uint8) {
 	//gouring.PrepRecv(sqe, cfd, &buff[0], 0, uint(flags))
 	sqe.Flags = flags
 
-	connInfo := EventInfo{
+	connInfo := &EventInfo{
 		cfd:   cfd,
 		etype: ETypeRead,
 	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
+	//sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	sqe.UserData = gouring.UserData(uintptr(unsafe.Pointer(connInfo)))
+	arrMapEvent[id][sqe.UserData] = connInfo
 }
 
-func ProduceSocketConnSendSqe(ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
+func ProduceSocketConnSendSqe(id int, ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
 	buff := buffs[cfd]
 
 	sqe := ring.GetSqe()
 	gouring.PrepSend(sqe, cfd, &buff[0], msgSize, uint(flags))
 	sqe.Flags = flags
 
-	connInfo := EventInfo{
-		cfd:   cfd,
-		etype: ETypeWrite,
-	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-}
-
-func ProduceSocketConnCloseSqe(ring *gouring.IoUring, cfd int) {
-	sqe := ring.GetSqe()
-	gouring.PrepClose(sqe, cfd)
-
-	connInfo := EventInfo{
-		cfd:   cfd,
-		etype: ETypeClose,
-	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-}
-
-func ProduceSocketConnRecvMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, flags uint8) {
-	buff := buffs[cfd]
-
-	var msghdr syscall.Msghdr
-	msghdr.Name = (*byte)(unsafe.Pointer(rsa))
-	msghdr.Namelen = uint32(syscall.SizeofSockaddrAny)
-	var iov syscall.Iovec
-	iov.Base = &buff[0]
-	iov.SetLen(len(buff))
-	msghdr.Iov = &iov
-	msghdr.Iovlen = 1
-
-	sqe := ring.GetSqe()
-	gouring.PrepRecvmsg(sqe, cfd, &msghdr, 0)
-	sqe.Flags = flags
-
-	connInfo := EventInfo{
-		cfd:   cfd,
-		etype: ETypeRead,
-	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(&connInfo))
-}
-
-func ProduceSocketConnSendMsgSqe(ring *gouring.IoUring, cfd int, rsa *syscall.RawSockaddrAny, msgSize int, flags uint8) {
-	//buff := buffs[cfd][:msgSize]
-	buff := buffs[cfd]
-
-	var msghdr syscall.Msghdr
-	msghdr.Name = (*byte)(unsafe.Pointer(rsa))
-	msghdr.Namelen = uint32(syscall.SizeofSockaddrAny)
-	var iov syscall.Iovec
-	iov.Base = &buff[0]
-	iov.SetLen(int(msgSize))
-	msghdr.Iov = &iov
-	msghdr.Iovlen = 1
-
-	sqe := ring.GetSqe()
-	gouring.PrepSendmsg(sqe, cfd, &msghdr, 0)
-	sqe.Flags = flags
-
 	connInfo := &EventInfo{
 		cfd:   cfd,
 		etype: ETypeWrite,
 	}
-	sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	//sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	sqe.UserData = gouring.UserData(uintptr(unsafe.Pointer(connInfo)))
+	arrMapEvent[id][sqe.UserData] = connInfo
 }
 
-func ProduceSocketConnRecvMsgSqeByBuff(ring *gouring.IoUring, cfd int, guid uint16, msgSize int, flags uint8) {
-}
-func ProduceSocketConnSendMsgSqeByBuff(ring *gouring.IoUring, cfd int, bid uint16, msgSize int, flags uint8) {
+func ProduceSocketConnCloseSqe(id int, ring *gouring.IoUring, cfd int) {
+	sqe := ring.GetSqe()
+	gouring.PrepClose(sqe, cfd)
+
+	connInfo := &EventInfo{
+		cfd:   cfd,
+		etype: ETypeClose,
+	}
+	//sqe.UserData.SetUnsafe(unsafe.Pointer(connInfo))
+	sqe.UserData = gouring.UserData(uintptr(unsafe.Pointer(connInfo)))
+	arrMapEvent[id][sqe.UserData] = connInfo
 }
 
 func InitProvideBuffer() {
@@ -386,6 +352,7 @@ var port = flag.String("port", "8888", "port")
 var mode = flag.String("mode", "", "sqp")
 
 var counter []int
+var arrMapEvent []map[gouring.UserData]*EventInfo
 
 func main() {
 	flag.Parse()
@@ -402,6 +369,7 @@ func main() {
 	}
 	println("ring cn", n)
 	counter = make([]int, n)
+	arrMapEvent = make([]map[gouring.UserData]*EventInfo, n)
 
 	lfd := listen(":" + *port)
 
@@ -412,6 +380,7 @@ func main() {
 			return
 		}
 		rings = append(rings, ring)
+		arrMapEvent[i] = make(map[gouring.UserData]*EventInfo)
 	}
 
 	for i := 0; i < n; i++ {
