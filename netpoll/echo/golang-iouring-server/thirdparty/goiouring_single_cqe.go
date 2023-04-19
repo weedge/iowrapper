@@ -247,7 +247,7 @@ func IOurigGoEchoServer() {
 			//log.Printf("close cqeRes %d connectFD %d \n", cqe.Res, eventInfo.cfd)
 
 		default:
-			log.Panicf("unsupport event type %d\n", eventInfo.etype)
+			log.Printf("[error] unsupport event type %d event:%+v\n", eventInfo.etype, eventInfo)
 		}
 		ring.SeenCqe(cqe)
 	}

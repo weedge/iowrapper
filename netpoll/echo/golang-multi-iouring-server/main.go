@@ -248,12 +248,20 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 			//log.Printf("id %d close cqeRes %d connectFD %d \n", id, cqe.Res, eventInfo.cfd)
 
 		default:
-			log.Printf("[error] unsupport event type %d\n", eventInfo.etype)
+			log.Printf("[error] unsupport event type %d event:%+v\n", eventInfo.etype, eventInfo)
 		}
 		ring.SeenCqe(cqe)
 	}
 
 }
+
+// tips: more detail see man io_uring_setup
+/*
+If  the  kernel thread is idle for more than sq_thread_idle milliseconds,
+it will set the IORING_SQ_NEED_WAKEUP bit in the flags field of the struct io_sq_ring.
+When this happens,  the  application must call io_uring_enter(2) to wake the kernel thread.
+If I/O is kept busy, the kernel thread will never sleep.
+*/
 
 func ProduceSocketListenAcceptSqe(ring *gouring.IoUring, lfd int, flags uint8) {
 	sqe := ring.GetSqe()

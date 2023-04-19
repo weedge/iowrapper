@@ -58,10 +58,11 @@ sudo bpftrace --btf -e 'kretprobe:create_io_thread { @[retval] = count(); } inte
 2. if need use golang runtime native support, please see this Note: [#31908](https://github.com/golang/go/issues/31908)
 
 3. 3rd io_uring support for golang:
-    * https://github.com/hodgesds/iouring-go 
-    * https://github.com/godzie44/go-uring 
-    * https://github.com/Iceber/iouring-go
-    * https://github.com/ii64/gouring [√] (one to one liburing cp,test coverage ok)
+    * https://github.com/hodgesds/iouring-go (old, no maintenance)
+    * https://github.com/godzie44/go-uring (use multi iouring impl golang net listener, acceptor,conn interface)
+    * https://github.com/Iceber/iouring-go (use epoll add eventfd IN event for io_uring peek 
+     cqe, depend epoll)
+    * https://github.com/ii64/gouring [√] (one to one liburing cp,test coverage ok,use userData need notice GC)
 
 4. RocksDB MultiGet use IO Uring interface: https://github.com/facebook/rocksdb/wiki/MultiGet-Performance
 
