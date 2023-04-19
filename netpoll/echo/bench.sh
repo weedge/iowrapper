@@ -33,7 +33,7 @@ for bytes in ${bytesArr[*]}; do
       #SRV_PID=$(lsof -itcp:$2 | sed -n -e 2p | awk '{print $2}')
       #taskset -cp 0 $SRV_PID
       sleep 3s
-      sudo strace -c -tt -p $SRV_PID &
+      #sudo strace -c -t -p $SRV_PID &
 
       OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')

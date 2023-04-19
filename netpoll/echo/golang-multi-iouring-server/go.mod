@@ -4,4 +4,4 @@ go 1.19
 
 require github.com/ii64/gouring v0.4.1
 
-replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230406152517-60a6d6e09b3a
+replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230419141631-a02ded170406
