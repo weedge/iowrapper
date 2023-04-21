@@ -25,6 +25,7 @@ bytesArr=(128 512 1000)
 ulimit -n 10240
 
 runCn=3
+benchDuration=10
 for bytes in ${bytesArr[*]}; do
   for connections in ${connectionsArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"
@@ -43,7 +44,7 @@ for bytes in ${bytesArr[*]}; do
 
       #sudo strace -c -t -p $SRV_PID &
 
-      OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration 30 --length $bytes`
+      OUT=`cargo run -q --manifest-path $curDir/rust_echo_bench/Cargo.toml --release -- --address "127.0.0.1:$port" --number $connections --duration $benchDuration --length $bytes`
       RPS=$(echo "${OUT}" | sed -n '/^Speed/ p' | sed -r 's|^([^.]+).*$|\1|; s|^[^0-9]*([0-9]+).*$|\1 |')
       RPS_SUM=$((RPS_SUM + RPS))
       echo "attempt: $i, rps: $RPS "

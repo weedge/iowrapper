@@ -17,16 +17,16 @@ type MockServerHandler struct {
 }
 
 func (m *MockServerHandler) OnConnect(c *poller.Conn) {
-	log.Infof("connect fd %d addr %s", c.GetFd(), c.GetAddr())
+	//log.Infof("connect fd %d addr %s", c.GetFd(), c.GetAddr())
 }
 
 func (m *MockServerHandler) OnMessage(c *poller.Conn, bytes []byte) {
-	log.Infof("read:%s len:%d bytes from fd:%d", bytes, len(bytes), c.GetFd())
+	//log.Infof("read:%s len:%d bytes from fd:%d", bytes, len(bytes), c.GetFd())
 	c.Write(bytes)
 }
 
 func (m *MockServerHandler) OnClose(c *poller.Conn, err error) {
-	log.Infof("close: %d err: %s", c.GetFd(), err.Error())
+	//log.Infof("close: %d err: %s", c.GetFd(), err.Error())
 }
 
 var port = flag.String("port", "8081", "port")

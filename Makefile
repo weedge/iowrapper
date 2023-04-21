@@ -7,16 +7,20 @@ echo_bench_avg_shell?=./netpoll/echo/bench_avg.sh
 boost_fiber_uring_proactor_build_dir?=${HOME}/project/c++/helio/build-opt
 
 target ?= \
-	golang_netpoll_echo_server \
-	golang_iouring_echo_server \
-	golang_iouring_sqp_echo_server \
-	#golang_reactor_echo_server \
+	golang_netpoll_more_echo_server \
+	golang_reactor_echo_server \
+	golang_multi_iouring_echo_server \
+	golang_multi_iouring_sqp_echo_server \
+	#boost_fiber_uring_echo_server \
+	#golang_netpoll_echo_server \
+	#golang_iouring_echo_server \
+	#golang_iouring_sqp_echo_server \
 	#c_epoll_echo_server \
 	#c_io_uring_echo_server \
 	#c_io_uring_echo_server_v3 \
 	#c_io_uring_echo_server_sqp \
 	#cpp20_coroutine_io_uring_echo_server \
-	#rust_io_uring_echo_server 5\
+	#rust_io_uring_echo_server \
 
 help:
 	@echo "build-echo"
@@ -127,7 +131,7 @@ boost_fiber_uring_echo_server:
 # make bench-echo target=golang_reactor_echo_server
 golang_reactor_echo_server:
 	#bench golang_reactor_echo_server
-	@${echo_bench_avg_shell} 8888 "./build/golang_reactor_echo_server --port 8888" \
+	@${echo_bench_avg_shell} 8888 "./build/golang_reactor_echo_server --port 8888" size \
 		>> ${echo_bench_result_dir}/golang_reactor_echo_server.`date +"%Y%m%d-%H%M%S"`.log 2>&1
 
 # make bench-echo target=golang_netpoll_more_echo_server
