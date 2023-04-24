@@ -44,10 +44,10 @@ build-echo: init
 	@make -C netpoll/echo/c-iouring-server
 	@make -C netpoll/echo/cpp-coroutine-iouring-server
 	@cargo build --manifest-path netpoll/echo/rust-iouring-server/Cargo.toml --release
-	@go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
-	@go build -v -ldflags="-s -w" -tags goiouring -o ./build/golang_iouring_echo_server netpoll/echo/golang-iouring-server/main.go
-	@go build -v -ldflags="-s -w" -o ./build/golang_reactor_echo_server netpoll/echo/golang-reactor-epoll-server/main.go
-	@go build -v -ldflags="-s -w" -o ./build/golang_multi_iouring_echo_server netpoll/echo/golang-multi-iouring-server/main.go
+	@CGO_ENABLED=0 go build -v -ldflags="-s -w" -o ./build/golang_netpoll_echo_server netpoll/echo/golang-netpoll-server/main.go
+	@CGO_ENABLED=0 go build -v -ldflags="-s -w" -tags goiouring -o ./build/golang_iouring_echo_server netpoll/echo/golang-iouring-server/main.go
+	@CGO_ENABLED=0 go build -v -ldflags="-s -w" -o ./build/golang_reactor_echo_server netpoll/echo/golang-reactor-epoll-server/main.go
+	@CGO_ENABLED=0 go build -v -ldflags="-s -w" -o ./build/golang_multi_iouring_echo_server netpoll/echo/golang-multi-iouring-server/main.go
 
 build-udp:
 	@cargo build --manifest-path netpoll/udp/iouring-worker-pool/Cargo.toml --release

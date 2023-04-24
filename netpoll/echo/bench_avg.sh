@@ -25,7 +25,7 @@ bytesArr=(128 512 1000)
 ulimit -n 10240
 
 runCn=3
-benchDuration=10
+benchDuration=30
 for bytes in ${bytesArr[*]}; do
   for connections in ${connectionsArr[*]}; do
     echo "run benchmarks with c = $connections and len = $bytes"
