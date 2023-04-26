@@ -4,9 +4,9 @@ use (
 	./netpoll/echo/golang-iouring-server
 	./netpoll/echo/golang-multi-iouring-server
 	./netpoll/echo/golang-reactor-epoll-server
-	./netpoll/echo/golang-epoll-iouring-server
+	./netpoll/echo/golang-epoll-eventfd-iouring-server
 )
 
 //replace github.com/weedge/lib => ../lib
 
-replace github.com/ii64/gouring => ../gouring
+//replace github.com/ii64/gouring => ../gouring

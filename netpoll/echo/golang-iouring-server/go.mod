@@ -9,4 +9,4 @@ require (
 
 require golang.org/x/sys v0.1.0 // indirect
 
-replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230419141631-a02ded170406
+replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230424045338-0bb8d1621980

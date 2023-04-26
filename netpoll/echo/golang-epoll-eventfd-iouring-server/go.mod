@@ -1,4 +1,4 @@
-module github.com/weedge/iowrapper/netpoll/echo/golang-epoll-iouring-server
+module github.com/weedge/iowrapper/netpoll/echo/golang-epoll-eventfd-iouring-server
 
 go 1.19
 
