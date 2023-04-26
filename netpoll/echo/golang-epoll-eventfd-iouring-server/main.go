@@ -51,7 +51,8 @@ const (
 )
 
 const (
-	Entries = 2048
+	Entries        = 2048
+	dispatchChSize = 1024
 )
 
 var (
@@ -61,15 +62,24 @@ var clientAddr syscall.RawSockaddrAny
 var clientAddrLen uint32 = syscall.SizeofSockaddrAny
 
 var mapEvent map[gouring.UserData]*EventInfo
-var userDataEventLock sync.RWMutex // rwlock for mapUserDataEvent
+var userDataEventLock sync.RWMutex // rwlock for mapEvent
+var dispatchChs []chan *EventInfo
+
+var submitLock sync.Mutex //mutex lock for submit ring
 
 var ringCn = flag.Int("ringCn", 0, "ring cn")
 var port = flag.String("port", "8888", "port")
 var mode = flag.String("mode", "", "sqp")
+var syncCb = flag.Bool("syncCb", false, "syncCb bool")
 
 func init() {
 	buffs = InitBuffs()
 	mapEvent = make(map[gouring.UserData]*EventInfo)
+	n := runtime.NumCPU()
+	dispatchChs = make([]chan *EventInfo, n)
+	for i := range dispatchChs {
+		dispatchChs[i] = make(chan *EventInfo, dispatchChSize)
+	}
 }
 
 func main() {
@@ -93,9 +103,16 @@ func main() {
 		log.Fatalf("registerEventFd failed: %v", err)
 	}
 
+	if !*syncCb {
+		log.Println("start dispatch event async cb")
+		for _, ch := range dispatchChs {
+			go runEventCbFromDispatch(ch)
+		}
+	}
+
 	signalCh := make(chan struct{}, 1)
 	stopCh := make(chan struct{})
-	go subCqeEventInfo(ring, signalCh, stopCh)
+	go subCqeEventInfo(ring, signalCh, stopCh, *syncCb)
 	err = initEpollWaitEventFD(eventfd, signalCh)
 	if err != nil {
 		log.Fatalf("initEpollWaitEventFD failed: %v", err)
@@ -291,17 +308,19 @@ func initEpollWaitEventFD(eventFD int, signCh chan<- struct{}) (err error) {
 func waitIouringEventFdEvents(pollFD int, signCh chan<- struct{}) {
 	epollEvents := make([]unix.EpollEvent, 100)
 	for {
+		//println("epoll")
 		n, err := unix.EpollWait(pollFD, epollEvents, -1)
 		if err != nil {
 			continue
 		}
+		//println(n)
 		for i := 0; i < n; i++ {
 			signCh <- struct{}{}
 		}
 	}
 }
 
-func subCqeEventInfo(ring *gouring.IoUring, signCh, stopCh <-chan struct{}) {
+func subCqeEventInfo(ring *gouring.IoUring, signCh, stopCh <-chan struct{}, syncCb bool) {
 	for {
 		select {
 		case <-signCh:
@@ -334,12 +353,16 @@ func subCqeEventInfo(ring *gouring.IoUring, signCh, stopCh <-chan struct{}) {
 			delete(mapEvent, cqe.UserData)
 			info.cqe = *cqe
 			userDataEventLock.Unlock()
-
 			ring.SeenCqe(cqe)
-			err = info.cb(info)
-			if err != nil {
-				log.Printf("[error] cb error %s", err.Error())
-				continue
+
+			if syncCb {
+				err = info.cb(info)
+				if err != nil {
+					log.Printf("[error] cb error %s", err.Error())
+					continue
+				}
+			} else {
+				dispatch(info)
 			}
 
 			//log.Printf("[debug] cqe %+v userData %d get event info: %+v callback ok", cqe, cqe.UserData, info)
@@ -349,7 +372,30 @@ func subCqeEventInfo(ring *gouring.IoUring, signCh, stopCh <-chan struct{}) {
 	}
 }
 
+// dipatch like golang worker pool, for order event
+func dispatch(event *EventInfo) {
+	fd := event.lfd
+	if fd <= 0 {
+		fd = event.cfd
+	}
+	index := fd % len(dispatchChs)
+	//log.Printf("[debug] event %+v index %d", event, index)
+	dispatchChs[index] <- event
+}
+
+func runEventCbFromDispatch(eventCh <-chan *EventInfo) {
+	for event := range eventCh {
+		err := event.cb(event)
+		if err != nil {
+			log.Printf("[error] event %+v cb error %s", event, err.Error())
+			continue
+		}
+	}
+}
+
 func ProduceSocketListenAcceptSqe(cb EventCallBack, ring *gouring.IoUring, lfd int, flags uint8) {
+	submitLock.Lock()
+	defer submitLock.Unlock()
 	sqe := ring.GetSqe()
 	gouring.PrepAccept(sqe, lfd, &clientAddr, (*uintptr)(unsafe.Pointer(&clientAddrLen)), 0)
 	sqe.Flags = flags
@@ -364,6 +410,8 @@ func ProduceSocketListenAcceptSqe(cb EventCallBack, ring *gouring.IoUring, lfd i
 }
 
 func ProduceSocketConnRecvSqe(cb EventCallBack, ring *gouring.IoUring, cfd int, flags uint8) {
+	submitLock.Lock()
+	defer submitLock.Unlock()
 	buff := buffs[cfd]
 
 	sqe := ring.GetSqe()
@@ -381,6 +429,8 @@ func ProduceSocketConnRecvSqe(cb EventCallBack, ring *gouring.IoUring, cfd int, 
 }
 
 func ProduceSocketConnSendSqe(cb EventCallBack, ring *gouring.IoUring, cfd int, msgSize int, flags uint8) {
+	submitLock.Lock()
+	defer submitLock.Unlock()
 	buff := buffs[cfd]
 
 	sqe := ring.GetSqe()
@@ -397,6 +447,8 @@ func ProduceSocketConnSendSqe(cb EventCallBack, ring *gouring.IoUring, cfd int, 
 }
 
 func ProduceSocketConnCloseSqe(cb EventCallBack, ring *gouring.IoUring, cfd int) {
+	submitLock.Lock()
+	defer submitLock.Unlock()
 	sqe := ring.GetSqe()
 	gouring.PrepClose(sqe, cfd)
 
