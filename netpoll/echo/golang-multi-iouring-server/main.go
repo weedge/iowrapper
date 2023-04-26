@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -212,7 +213,7 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 		case ETypeRead:
 			readBytesLen := cqe.Res
 			if readBytesLen <= 0 {
-				if readBytesLen < 0 || cqe.Res == int32(syscall.ENOBUFS) || cqe.Res == int32(syscall.EBADF) {
+				if readBytesLen < 0 {
 					log.Printf("[error] id %d read errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
 				} else {
 					//log.Printf("[warn] id %d read empty errNO %d connectFd %d", id, cqe.Res, eventInfo.cfd)
@@ -220,7 +221,7 @@ func IOurigGoEchoServer(id, lfd int, ring *gouring.IoUring) {
 				// no bytes available on socket, client must be disconnected
 				//syscall.Shutdown(lfd, syscall.SHUT_RDWR)
 				// notice: if next connect use closed cfd (TIME_WAIT stat between 2MSL eg:4m), read from closed cfd return EBADF
-				if cqe.Res != int32(syscall.EBADF) {
+				if cqe.Res != -int32(syscall.EBADF) {
 					//syscall.Close(eventInfo.cfd)
 					ProduceSocketConnCloseSqe(id, ring, eventInfo.cfd)
 				}

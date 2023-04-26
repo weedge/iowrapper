@@ -41,7 +41,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230419141631-a02ded170406
+replace github.com/ii64/gouring => github.com/weedge/gouring v0.0.0-20230424045338-0bb8d1621980
 
 //replace github.com/weedge/lib => ../../../../lib
 
